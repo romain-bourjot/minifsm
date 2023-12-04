@@ -1,0 +1,51 @@
+{
+  "name": "@minifsm/core",
+  "version": "1.0.2",
+  "description": "Minimalistic state machine",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "build:clean": "rm -Rf ./dist",
+    "build:ts": "tsc",
+    "build:uglify": "uglifyjs --compress --mangle -o ./dist/src/index.js -- ./dist/src/index.js",
+    "build": "npm run build:clean && npm run lint:fix && npm run build:ts && npm run build:uglify",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "example:word-counter": "tsc && node ./dist/examples/word-counter.js",
+    "example:counter": "tsc && node ./dist/examples/counter.js",
+    "example:traffic-light": "tsc && node ./dist/examples/traffic-light.js",
+    "start": "tsc && node ."
+  },
+  "files:": [
+    "dist"
+  ],
+  "types": "./dist/src/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romain-bourjot/minifsm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/romain-bourjot/minifsm/issues"
+  },
+  "homepage": "https://github.com/romain-bourjot/minifsm/blob/main/README.md",
+  "keywords": [
+    "state machine",
+    "finite state machine",
+    "finite automata",
+    "typescript",
+    "state",
+    "interpreter",
+    "fsm",
+    "state-management",
+    "library",
+    "workflow"
+  ],
+  "author": "Romain Bourjot",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "18.18.9",
+    "eslint": "8.51.0",
+    "eslint-config-standard-with-typescript": "39.1.1",
+    "typescript": "5.2.2",
+    "uglify-js": "3.17.4"
+  }
+}
