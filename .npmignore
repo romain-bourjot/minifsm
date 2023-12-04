@@ -1,0 +1,6 @@
+examples
+src
+minifsm.png
+*.png
+tsconfig.json
+.idea

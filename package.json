@@ -1,0 +1,85 @@
+{
+  "name": "@minifsm/core",
+  "version": "1.0.2",
+  "description": "Minimalistic state machine",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "test": "mocha -r ts-node/register tests/**/*.spec.ts",
+    "coverage": "nyc npm tst",
+    "build:clean": "rm -Rf ./dist",
+    "build:ts": "tsc",
+    "build:uglify": "uglifyjs --compress --mangle -o ./dist/src/index.js -- ./dist/src/index.js",
+    "build": "npm run build:clean && npm run build:ts && npm run build:uglify",
+    "lint": "eslint",
+    "example:counter": "tsc && node ./dist/examples/counter.js",
+    "snippet:fsm-machine": "tsc && node ./dist/examples/snippets/fsm-machine.js",
+    "snippet:fsm-serialized-machine": "tsc && node ./dist/examples/snippets/fsm-serialized-machine.js",
+    "snippet:fsm-state-definition": "tsc && node ./dist/examples/snippets/fsm-state-definition.js",
+    "snippet:fsm-transition": "tsc && node ./dist/examples/snippets/fsm-transition.js",
+    "snippet:fsm-action": "tsc && node ./dist/examples/snippets/fsm-action.js",
+    "snippet:fsm-condition": "tsc && node ./dist/examples/snippets/fsm-condition.js",
+    "snippet:fsm-conditional-transition": "tsc && node ./dist/examples/snippets/fsm-conditional-transition.js",
+    "snippet:fsm-definition": "tsc && node ./dist/examples/snippets/fsm-definition.js",
+    "snippet:create-machine": "tsc && node ./dist/examples/snippets/create-machine.js",
+    "snippet:create-null-action": "tsc && node ./dist/examples/snippets/create-null-action.js",
+    "snippet:create-null-state-definition": "tsc && node ./dist/examples/snippets/create-null-state-definition.js",
+    "snippet:create-null-transition": "tsc && node ./dist/examples/snippets/create-null-transition.js",
+    "snippet:deserialize-machine": "tsc && node ./dist/examples/snippets/deserialize-machine.js",
+    "snippet:serialize-machine": "tsc && node ./dist/examples/snippets/serialize-machine.js",
+    "snippet:do-transition": "tsc && node ./dist/examples/snippets/do-transition.js",
+    "nok_example:word-counter": "tsc && node ./dist/examples/word-counter.js",
+    "nok_example:traffic-light": "tsc && node ./dist/examples/traffic-light.js",
+    "docs:api-reference": "typedoc",
+    "docs:dev": "vitepress dev vitepress",
+    "docs:build": "vitepress build vitepress",
+    "docs:preview": "vitepress preview vitepress"
+  },
+  "files:": [
+    "dist/src"
+  ],
+  "types": "./dist/src/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romain-bourjot/minifsm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/romain-bourjot/minifsm/issues"
+  },
+  "homepage": "https://github.com/romain-bourjot/minifsm/blob/main/README.md",
+  "keywords": [
+    "state machine",
+    "finite state machine",
+    "finite automata",
+    "typescript",
+    "state",
+    "interpreter",
+    "fsm",
+    "state-management",
+    "library",
+    "workflow"
+  ],
+  "_moduleAliases": {
+    "@minifsm/core": "./dist/src/index.js"
+  },
+  "author": "Romain Bourjot",
+  "license": "MIT",
+  "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "1.0.2",
+    "@types/mocha": "10.0.6",
+    "@types/module-alias": "2.0.4",
+    "@types/node": "18.18.9",
+    "eslint": "8.51.0",
+    "eslint-config-standard-with-typescript": "39.1.1",
+    "mocha": "10.2.0",
+    "module-alias": "2.2.3",
+    "nyc": "15.1.0",
+    "ts-node": "10.9.2",
+    "typedoc-plugin-include-example": "1.0.2",
+    "typedoc-plugin-markdown": "4.0.0-next.53",
+    "typedoc-vitepress-theme": "1.0.0-next.9",
+    "typescript": "5.2.2",
+    "uglify-js": "3.17.4",
+    "vitepress": "1.0.0-rc.42",
+    "vue": "3.4.18"
+  }
+}

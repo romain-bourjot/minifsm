@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "target": "es2015",
+    "declaration": true,
+    "outDir": "./dist",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "removeComments": true,
+    "paths": {
+      "@minifsm/core": [
+        "./src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "examples/**/*",
+    "tests/**/*"
+  ]
+}

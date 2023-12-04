@@ -1,0 +1,14 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "./src/index.ts"
+  ],
+  "out": "vitepress/typedoc",
+  "plugin": [
+    "typedoc-plugin-include-example",
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme"
+  ],
+  "docsRoot": "./vitepress",
+  "readme": "none"
+}

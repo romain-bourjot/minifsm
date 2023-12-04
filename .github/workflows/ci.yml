@@ -1,0 +1,68 @@
+name: CI
+run-name: ${{ github.actor }} has pushed the launch button 🚀
+
+on: push
+# on:
+#  push:
+#    tags:
+#      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: 🔧 Install dependencies
+        shell: bash
+        run: npm ci > /dev/null
+
+      - name: 📏 Linter
+        shell: bash
+        run: npm run lint
+
+      - name: 🛡️ Tests and coverage
+        shell: bash
+        run: npm run coverage
+
+      - name: 🏗️ Build package
+        shell: bash
+        run: npm run build
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: 📚 Build documentation
+        shell: bash
+        run: |
+          npm run docs:api-reference
+          npm run docs:build
+          touch ./vitepress/.vitepress/dist/.nojekyll
+
+      - name: 📦 Upload documentation artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./vitepress/.vitepress/dist
+
+  deploy-documentation:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 🌐 Publish documentation
+        id: deployment
+        uses: actions/deploy-pages@v4
