@@ -1,0 +1,23 @@
+import{_ as a,c as e,o as n,V as t}from"./chunks/framework.Bled7NFg.js";const S=JSON.parse('{"title":"Function: createMachine()","description":"","frontmatter":{},"headers":[],"relativePath":"typedoc/functions/createMachine.md","filePath":"typedoc/functions/createMachine.md"}'),s={name:"typedoc/functions/createMachine.md"},p=t(`<p><a href="./../">@minifsm/core</a> / createMachine</p><h1 id="function-createmachine" tabindex="-1">Function: createMachine() <a class="header-anchor" href="#function-createmachine" aria-label="Permalink to &quot;Function: createMachine()&quot;">​</a></h1><blockquote><p><strong>createMachine</strong>&lt;<code>FSMState</code>, <code>FSMContext</code>&gt;(<code>proto</code>): <a href="./../interfaces/FSMMachine.html"><code>FSMMachine</code></a>&lt;<code>FSMState</code>, <code>FSMContext</code>&gt;</p></blockquote><p>Creates a Finite State Machine (FSM) with the specified current state and context. FSM instances represent the current state and context of an FSM. They encapsulate the state and context data required for performing transitions and tracking the FSM&#39;s state. FSM instances provide a convenient way to manage and manipulate FSMs within applications.</p><h3 id="example" tabindex="-1">Example <a class="header-anchor" href="#example" aria-label="Permalink to &quot;Example&quot;">​</a></h3><div class="language- vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang"></span><pre class="shiki shiki-themes github-light github-dark vp-code"><code><span class="line"><span></span></span>
+<span class="line"><span>// npm run snippet:create-machine</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>import &#39;module-alias/register&#39;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>import { createMachine } from &#39;@minifsm/core&#39;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>// Define types for state and context</span></span>
+<span class="line"><span>type MyState = &#39;STATE_A&#39; | &#39;STATE_B&#39;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>interface MyContext {</span></span>
+<span class="line"><span>  data: string</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>// Define initial state and context</span></span>
+<span class="line"><span>const initialState: MyState = &#39;STATE_A&#39;</span></span>
+<span class="line"><span>const initialContext: MyContext = { data: &#39;Initial data&#39; }</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>// Create a machine instance</span></span>
+<span class="line"><span>const machine = createMachine({ currentState: initialState, context: initialContext })</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>// Log the machine instance</span></span>
+<span class="line"><span>console.log(&#39;Machine Instance:&#39;, machine)</span></span></code></pre></div><h2 id="type-parameters" tabindex="-1">Type parameters <a class="header-anchor" href="#type-parameters" aria-label="Permalink to &quot;Type parameters&quot;">​</a></h2><p>• <strong>FSMState</strong></p><p>• <strong>FSMContext</strong></p><h2 id="parameters" tabindex="-1">Parameters <a class="header-anchor" href="#parameters" aria-label="Permalink to &quot;Parameters&quot;">​</a></h2><p>• <strong>proto</strong></p><p>• <strong>proto.context</strong>: <code>FSMContext</code></p><p>The context of the FSM.</p><p>• <strong>proto.currentState</strong>: <code>FSMState</code></p><p>The current state of the FSM.</p><h2 id="returns" tabindex="-1">Returns <a class="header-anchor" href="#returns" aria-label="Permalink to &quot;Returns&quot;">​</a></h2><p><a href="./../interfaces/FSMMachine.html"><code>FSMMachine</code></a>&lt;<code>FSMState</code>, <code>FSMContext</code>&gt;</p><p>A new FSM instance.</p><h2 id="typeparam" tabindex="-1">Typeparam <a class="header-anchor" href="#typeparam" aria-label="Permalink to &quot;Typeparam&quot;">​</a></h2><p>FSMState - Type of the FSM state.</p><h2 id="typeparam-1" tabindex="-1">Typeparam <a class="header-anchor" href="#typeparam-1" aria-label="Permalink to &quot;Typeparam&quot;">​</a></h2><p>FSMContext - Type of the FSM context.</p><h2 id="source" tabindex="-1">Source <a class="header-anchor" href="#source" aria-label="Permalink to &quot;Source&quot;">​</a></h2><p><a href="https://github.com/romain-bourjot/minifsm/blob/4218d81/src/index.ts#L294" target="_blank" rel="noreferrer">index.ts:294</a></p>`,24),c=[p];function o(r,i,l,h,d,m){return n(),e("div",null,c)}const M=a(s,[["render",o]]);export{S as __pageData,M as default};
