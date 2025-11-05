@@ -5,7 +5,7 @@
     <img alt="MiniFSM logotype" src="./vitepress/public/miniFSM.webp" width="200" />
   </picture>
     <br/>
-    <strong>MiniFSM: The Simple, Flexible TypeScript Library for Efficient Finite State Machine Implementation.</strong>
+    <strong>A lightweight, type-safe TypeScript library for building finite state machines</strong>
   <br />
   <br />
 </p>
@@ -18,26 +18,33 @@
 [![NPM Version](https://img.shields.io/npm/v/%40minifsm%2Fcore)](https://www.npmjs.com/package/@minifsm/core)
 
 
-> **MiniFSM** is a lightweight, flexible TypeScript library for implementing Finite State Machines (FSM) in both
-> frontend
-> and backend applications. Designed with simplicity in mind, it offers an intuitive way of managing state transitions
-> in
-> a highly descriptive manner.
+> **MiniFSM** is a lightweight, flexible TypeScript library for implementing Finite State Machines (FSMs) in both frontend and backend applications. Designed with simplicity in mind, it provides an intuitive, type-safe way to manage state transitions with minimal boilerplate.
 
 ---
 
 ## Features
 
-- ✨ **Simple API**: With just a few types and one core function, MiniFSM keeps things simple yet powerful.
-- 🛠 **Backend and Frontend Compatibility**️: Versatile enough to be used across different development contexts.
-- 🔒 **Immutability-Friendly**: Designed to work well in immutable data environments, though not strictly enforced.
+- ✨ **Simple API**: Just a few types and one core function—simple yet powerful
+- 🛠 **Universal**: Works seamlessly in both frontend and backend environments
+- 🔒 **Immutability-Friendly**: Designed for immutable data patterns (not strictly enforced)
+- 📦 **Type-Safe**: Full TypeScript support with strong typing for states, context, and inputs
+- 🚀 **Zero Dependencies**: Lightweight and minimal footprint
+
+## Installation
+
+```bash
+npm install @minifsm/core
+# or
+yarn add @minifsm/core
+# or
+pnpm add @minifsm/core
+```
 
 ## Usage
 
-### Define FSM
+### Defining Your State Machine
 
-You can define a Finite State Machine using MiniFSM by creating a definition object that describes the states,
-transitions, and actions.
+Create a state machine by defining states, transitions, and actions:
 
 ```ts
 import {FSMDefinition} from '@minifsm/core';
@@ -77,12 +84,12 @@ const fsmDefinition: FSMDefinition<MyState, MyContext, MyInput> = {
 };
 ```
 
-### Perform Transition
+### Executing Transitions
 
-To perform a transition in the FSM, use the **doTransition** function.
+Trigger state transitions using the `doTransition` function:
 
 ```ts
-import {doTransition, createMachie} from '@minifsm/core';
+import {doTransition, createMachine} from '@minifsm/core';
 
 // Create your initial machine
 const machine = createMachine({
@@ -99,9 +106,9 @@ const updatedMachine = doTransition({
 
 ```
 
-## Serialize/Deserialize
+## Serialization
 
-You can serialize and deserialize the FSM for storage or communication purposes.
+Serialize and deserialize state machines for storage or transmission:
 
 ```ts
 import {serializeMachine, deserializeMachine} from '@minifsm/core';
@@ -116,9 +123,9 @@ const deserializedMachine = deserializeMachine({
 });
 ```
 
-## API Reference
+## Documentation
 
-For detailed API reference and examples, see the [API Documentation](http://example.com).
+For detailed API reference, advanced examples, and guides, visit the [full documentation](https://romain-bourjot.github.io/minifsm/).
 
 ## License
 
