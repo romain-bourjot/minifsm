@@ -34,7 +34,7 @@
     "docs:build": "vitepress build vitepress",
     "docs:preview": "vitepress preview vitepress"
   },
-  "files:": [
+  "files": [
     "dist/src"
   ],
   "types": "./dist/src/index.d.ts",
