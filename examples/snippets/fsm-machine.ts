@@ -2,7 +2,7 @@
 
 import 'module-alias/register'
 
-import { type FSMMachine } from '@minifsm/core'
+import { type MachineState } from '@minifsm/core'
 
 // Define types for state and context
 type MyState = 'START' | 'IN_PROGRESS' | 'COMPLETE'
@@ -12,7 +12,7 @@ interface MyContext {
 }
 
 // Define an initial machine state
-const initialMachineState: FSMMachine<MyState, MyContext> = {
+const initialMachineState: MachineState<MyState, MyContext> = {
   currentState: 'START',
   context: { progress: 0 }
 }
@@ -21,7 +21,7 @@ const initialMachineState: FSMMachine<MyState, MyContext> = {
 console.log('Initial Machine State:', initialMachineState)
 
 // Simulate a transition
-const updatedMachineState: FSMMachine<MyState, MyContext> = {
+const updatedMachineState: MachineState<MyState, MyContext> = {
   currentState: 'IN_PROGRESS',
   context: { progress: 50 }
 }

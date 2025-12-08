@@ -2,7 +2,7 @@
 
 import 'module-alias/register'
 
-import { type FSMSerializedMachine } from '@minifsm/core'
+import { type SerializedMachine } from '@minifsm/core'
 
 // Define types for context
 interface MyContext {
@@ -18,7 +18,7 @@ enum StringEnumState {
 }
 
 // Create a serialized machine with State as a string enum
-const serializedMachineStringEnum: FSMSerializedMachine<MyContext> = {
+const serializedMachineStringEnum: SerializedMachine<MyContext> = {
   currentState: StringEnumState.IN_PROGRESS,
   context: { progress: 75, message: 'Processing...' }
 }
@@ -30,24 +30,9 @@ console.log('Serialized Machine with String Enum State:', serializedMachineStrin
 type StringConstantUnionState = 'START' | 'IN_PROGRESS' | 'COMPLETE'
 
 // Create a serialized machine with State as a string constant union
-const serializedMachineStringUnion: FSMSerializedMachine<MyContext> = {
+const serializedMachineStringUnion: SerializedMachine<MyContext> = {
   currentState: 'IN_PROGRESS',
   context: { progress: 75, message: 'Processing...' }
 }
 
 console.log('Serialized Machine with String Constant Union State:', serializedMachineStringUnion)
-
-// 3. State is a numeric enum
-enum NumericEnumState {
-  START,
-  IN_PROGRESS,
-  COMPLETE
-}
-
-// Create a serialized machine with State as a numeric enum
-const serializedMachineNumericEnum: FSMSerializedMachine<MyContext> = {
-  currentState: NumericEnumState.IN_PROGRESS.toString(),
-  context: { progress: 75, message: 'Processing...' }
-}
-
-console.log('Serialized Machine with Numeric Enum State:', serializedMachineNumericEnum)

@@ -1,10 +1,11 @@
 import 'module-alias/register'
 import {
   createMachine,
-  createNullStateDefinition,
   deserializeMachine,
   doTransition,
-  type FSMDefinition,
+  type MachineDef,
+  type MachineState,
+  type BaseInput,
   serializeMachine
 } from '@minifsm/core'
 
@@ -20,50 +21,45 @@ interface MyContext {
   progress: number
 }
 
-interface MyInput {
+interface MyInput extends BaseInput<'INCREMENT'> {
   increment: number
 }
 
-// Define FSM transitions and actions
-const fsmDefinition: FSMDefinition<MyState, MyContext, MyInput> = {
-  [MyState.START]: {
-    transitions: [
-      {
-        condition: ({ context, input }) => input.increment > 0,
-        nextState: MyState.IN_PROGRESS,
-        action: ({ context, input }) => ({
+// Define FSM with function-based handlers
+const fsmDefinition: MachineDef<MyState, MyContext, MyInput> = {
+  [MyState.START]: ({ context, input }) => {
+    if (input.increment > 0) {
+      return {
+        currentState: MyState.IN_PROGRESS,
+        context: {
           ...context,
           progress: context.progress + input.increment
-        })
+        }
       }
-    ],
-    defaultTransition: {
-      nextState: MyState.START,
-      action: ({ context }) => context
+    }
+    return undefined
+  },
+
+  [MyState.IN_PROGRESS]: ({ context, input }) => {
+    const newProgress = context.progress + input.increment
+    if (newProgress >= 100) {
+      return {
+        currentState: MyState.COMPLETE,
+        context: { ...context, progress: newProgress }
+      }
+    }
+    return {
+      currentState: MyState.IN_PROGRESS,
+      context: { ...context, progress: newProgress }
     }
   },
-  [MyState.IN_PROGRESS]: {
-    transitions: [
-      {
-        condition: ({ context }) => context.progress >= 100,
-        nextState: MyState.COMPLETE,
-        action: ({ context }) => context
-      }
-    ],
-    defaultTransition: {
-      nextState: MyState.IN_PROGRESS,
-      action: ({ context, input }) => ({
-        ...context,
-        progress: context.progress + input.increment
-      })
-    }
-  },
-  [MyState.COMPLETE]: createNullStateDefinition(MyState.COMPLETE)
+
+  [MyState.COMPLETE]: () => undefined
 }
 
 // Define initial context and input
 const initialContext: MyContext = { progress: 0 }
-const input: MyInput = { increment: 20 }
+const input: MyInput = { type: 'INCREMENT', increment: 20 }
 
 // Create initial FSM machine
 const machine = createMachine({
@@ -72,11 +68,11 @@ const machine = createMachine({
 })
 
 // Perform transition
-const updatedMachine = doTransition({
-  definition: fsmDefinition,
-  input,
-  machine
-})
+const updatedMachine = doTransition(
+  fsmDefinition,
+  machine,
+  input
+)
 
 // Serialize FSM
 const serializedMachine = serializeMachine(updatedMachine)
@@ -93,17 +89,17 @@ console.log('Updated Machine:', updatedMachine)
 console.log('Serialized Machine:', serializedMachine)
 console.log('Deserialized Machine:', deserializedMachine)
 
-let mutatedMachine = createMachine({
+let mutatedMachine: MachineState<MyState, MyContext> = createMachine({
   currentState: MyState.START,
   context: initialContext
 })
 
 while (mutatedMachine.currentState !== MyState.COMPLETE) {
-  mutatedMachine = doTransition({
-    definition: fsmDefinition,
-    input,
-    machine: mutatedMachine
-  })
+  mutatedMachine = doTransition(
+    fsmDefinition,
+    mutatedMachine,
+    input
+  )
 }
 
 console.log('Complete Machine: ', mutatedMachine)

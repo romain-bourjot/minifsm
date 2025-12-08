@@ -2,7 +2,7 @@
 
 import 'module-alias/register'
 
-import { doTransition, type FSMDefinition, type FSMMachine } from '@minifsm/core'
+import { doTransition, type MachineDef, type MachineState, type BaseInput } from '@minifsm/core'
 
 // Define types for state, context, and input
 type MyState = 'STATE_A' | 'STATE_B'
@@ -11,43 +11,39 @@ interface MyContext {
   data: string
 }
 
-interface MyInput {
-  action: string
-}
+interface MyInput extends BaseInput<'go_to_B' | 'stay'> {}
 
-// Define an FSM definition
-const fsmDefinition: FSMDefinition<MyState, MyContext, MyInput> = {
-  STATE_A: {
-    transitions: [
-      {
-        condition: ({ input }) => input.action === 'go_to_B',
-        nextState: 'STATE_B',
-        action: ({ context }) => ({ ...context, data: 'Transitioned to STATE_B' })
+type MyMachine = MachineState<MyState, MyContext>
+
+// Define an FSM definition with function-based handlers
+const fsmDefinition: MachineDef<MyState, MyContext, MyInput> = {
+  STATE_A: ({ context, input }) => {
+    if (input.type === 'go_to_B') {
+      return {
+        currentState: 'STATE_B',
+        context: { ...context, data: 'Transitioned to STATE_B' }
       }
-    ],
-    defaultTransition: { nextState: 'STATE_A', action: ({ context }) => context }
+    }
+    return undefined // Stay in STATE_A
   },
-  STATE_B: {
-    transitions: [],
-    defaultTransition: { nextState: 'STATE_B', action: ({ context }) => context }
-  }
+  STATE_B: () => undefined
 }
 
 // Define an FSM machine instance
-const machine: FSMMachine<MyState, MyContext> = {
+const machine: MyMachine = {
   currentState: 'STATE_A',
   context: { data: 'Initial data' }
 }
 
 // Define an input triggering transition to STATE_B
-const inputToStateB: MyInput = { action: 'go_to_B' }
+const inputToStateB: MyInput = { type: 'go_to_B' }
 
 // Perform the transition based on the input
-const updatedMachine = doTransition({
-  definition: fsmDefinition,
-  input: inputToStateB,
-  machine
-})
+const updatedMachine = doTransition(
+  fsmDefinition,
+  machine,
+  inputToStateB
+)
 
 // Log the updated machine after transition
 console.log('Updated Machine after transition:', updatedMachine)
