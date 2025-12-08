@@ -65,21 +65,21 @@
   "license": "MIT",
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "1.0.2",
-    "@types/mocha": "10.0.6",
+    "@types/mocha": "10.0.10",
     "@types/module-alias": "2.0.4",
-    "@types/node": "18.18.9",
+    "@types/node": "22.15.29",
     "eslint": "^9.39.0",
     "eslint-config-love": "^136.0.0",
-    "mocha": "10.2.0",
+    "mocha": "11.7.5",
     "module-alias": "2.2.3",
-    "nyc": "15.1.0",
+    "nyc": "17.1.0",
     "ts-node": "10.9.2",
-    "typedoc-plugin-include-example": "1.0.2",
-    "typedoc-plugin-markdown": "4.0.0-next.53",
-    "typedoc-vitepress-theme": "1.0.0-next.9",
-    "typescript": "5.2.2",
-    "uglify-js": "3.17.4",
-    "vitepress": "1.0.0-rc.42",
-    "vue": "3.4.18"
+    "typedoc-plugin-include-example": "3.0.2",
+    "typedoc-plugin-markdown": "4.9.0",
+    "typedoc-vitepress-theme": "1.1.2",
+    "typescript": "5.9.3",
+    "uglify-js": "3.19.3",
+    "vitepress": "1.6.4",
+    "vue": "3.5.25"
   }
 }

@@ -2,12 +2,12 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "module": "commonjs",
-    "target": "es2015",
+    "target": "ES2020",
     "declaration": true,
     "outDir": "./dist",
-    "noImplicitAny": true,
-    "strictNullChecks": true,
+    "strict": true,
     "removeComments": true,
+    "skipLibCheck": true,
     "paths": {
       "@minifsm/core": [
         "./src/index.ts"

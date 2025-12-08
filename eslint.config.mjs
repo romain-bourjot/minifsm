@@ -6,7 +6,8 @@ export default [
     ignores: [
       'dist/**',
       'node_modules/**',
-      'vitepress/**'
+      'vitepress/**',
+      'coverage/**'
     ]
   },
   // Main source files - strict rules
@@ -64,6 +65,8 @@ export default [
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/no-import-type-side-effects': 'off',
       '@typescript-eslint/no-misused-spread': 'off',
+      '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
       'eslint-comments/require-description': 'off'
     }
   }

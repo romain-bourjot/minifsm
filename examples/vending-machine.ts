@@ -37,13 +37,16 @@ export const vendingMachineDefinition: FSMDefinition<VendingMachineState, Vendin
       condition: ({ input }: { input: VendingMachineInput }) => input.type === 'SELECTION',
       nextState: VendingMachineState.SELECTED,
       action: ({ input, context }: {
-        input: VendingMachineSelectionInput
+        input: VendingMachineInput
         context: VendingMachineContext
-      }): VendingMachineContext => ({
-        ...context,
-        itemSelected: input.itemSelected,
-        itemCost: 2
-      })
+      }): VendingMachineContext => {
+        const selectionInput = input as VendingMachineSelectionInput
+        return {
+          ...context,
+          itemSelected: selectionInput.itemSelected,
+          itemCost: 2
+        }
+      }
     }],
     defaultTransition: createNullTransition(VendingMachineState.IDLE)
   },
@@ -56,15 +59,18 @@ export const vendingMachineDefinition: FSMDefinition<VendingMachineState, Vendin
       }: {
         input: VendingMachineInput
         context: VendingMachineContext
-      }) => input.type === 'MONEY_INSERTED' && (input.amount + context.moneyInserted) < context.itemCost,
+      }) => input.type === 'MONEY_INSERTED' && ((input as VendingMachineMoneyInsertedInput).amount + context.moneyInserted) < context.itemCost,
       nextState: VendingMachineState.SELECTED,
       action: ({ input, context }: {
-        input: VendingMachineMoneyInsertedInput
+        input: VendingMachineInput
         context: VendingMachineContext
-      }): VendingMachineContext => ({
-        ...context,
-        moneyInserted: context.moneyInserted + input.amount
-      })
+      }): VendingMachineContext => {
+        const moneyInput = input as VendingMachineMoneyInsertedInput
+        return {
+          ...context,
+          moneyInserted: context.moneyInserted + moneyInput.amount
+        }
+      }
     }, {
       condition: ({
         input,
@@ -72,15 +78,18 @@ export const vendingMachineDefinition: FSMDefinition<VendingMachineState, Vendin
       }: {
         input: VendingMachineInput
         context: VendingMachineContext
-      }) => input.type === 'MONEY_INSERTED' && (input.amount + context.moneyInserted) >= context.itemCost,
+      }) => input.type === 'MONEY_INSERTED' && ((input as VendingMachineMoneyInsertedInput).amount + context.moneyInserted) >= context.itemCost,
       nextState: VendingMachineState.DISPENSING,
       action: ({ input, context }: {
-        input: VendingMachineMoneyInsertedInput
+        input: VendingMachineInput
         context: VendingMachineContext
-      }): VendingMachineContext => ({
-        ...context,
-        moneyInserted: context.moneyInserted + input.amount
-      })
+      }): VendingMachineContext => {
+        const moneyInput = input as VendingMachineMoneyInsertedInput
+        return {
+          ...context,
+          moneyInserted: context.moneyInserted + moneyInput.amount
+        }
+      }
     }],
     defaultTransition: createNullTransition(VendingMachineState.SELECTED)
   },
