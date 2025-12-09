@@ -3,30 +3,33 @@
 layout: home
 
 hero:
-  name: "miniFSM"
-  text: "WHATever!"
-  tagline: "Empowering Stateful Efficiency tagline"
+  name: "MiniFSM"
+  text: "Type-Safe State Machines"
+  tagline: "A lightweight TypeScript library for building finite state machines with zero dependencies"
   image:
     src: /miniFSM.webp
-    alt: miniFSM
+    alt: MiniFSM
   actions:
     - theme: brand
       text: Quick Start
-      link: /quick-start.md
+      link: /quick-start
     - theme: alt
       text: API Reference
-      link: /typedoc/globals.md
+      link: /typedoc/
 
 features:
-  - icon: 🎨
-    title: Simplified State Configuration
-    details: Easily define states and behaviors, simplifying application design and maintenance.
+  - icon: ⚡
+    title: Minimal API
+    details: One core function and a few types. Define states as handler functions—no complex configuration or boilerplate required.
+  - icon: 🔒
+    title: Type-Safe
+    details: Full TypeScript support with strong typing for states, context, and inputs. Catch errors at compile time, not runtime.
   - icon: 🔄
-    title: Enhanced State Management
-    details: Streamline state handling and transitions for smoother application flow and enhanced performance.
-  - icon: 🤖
-    title: Boost Development Speed
-    details: Use ChatGPT to turbocharge your workflow, reducing development time and effort.
+    title: Immutable by Design
+    details: Transitions return new state objects. Integrates seamlessly with React, Redux, or any immutable architecture.
+  - icon: 📦
+    title: Zero Dependencies
+    details: Lightweight footprint with no external dependencies. Works in Node.js, browsers, Deno, Bun, and edge runtimes.
 ---
 
 

@@ -5,7 +5,7 @@
     <img alt="MiniFSM logotype" src="./vitepress/public/miniFSM.webp" width="200" />
   </picture>
     <br/>
-    <strong>A lightweight, type-safe TypeScript library for building finite state machines</strong>
+    <strong>A lightweight, type-safe finite state machine library for TypeScript</strong>
   <br />
   <br />
 </p>
@@ -17,115 +17,166 @@
 [![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fromain-bourjot.github.io%2Fminifsm%2F&label=documentation)](https://romain-bourjot.github.io/minifsm/)
 [![NPM Version](https://img.shields.io/npm/v/%40minifsm%2Fcore)](https://www.npmjs.com/package/@minifsm/core)
 
-
-> **MiniFSM** is a lightweight, flexible TypeScript library for implementing Finite State Machines (FSMs) in both frontend and backend applications. Designed with simplicity in mind, it provides an intuitive, type-safe way to manage state transitions with minimal boilerplate.
+> **MiniFSM** is a lightweight TypeScript library for building finite state machines. It works in Node.js, browsers, and any JavaScript runtime. Define states as simple handler functions and let TypeScript ensure type safety across your state transitions.
 
 ---
 
 ## Features
 
-- ✨ **Simple API**: Just a few types and one core function—simple yet powerful
-- 🛠 **Universal**: Works seamlessly in both frontend and backend environments
-- 🔒 **Immutability-Friendly**: Designed for immutable data patterns (not strictly enforced)
-- 📦 **Type-Safe**: Full TypeScript support with strong typing for states, context, and inputs
-- 🚀 **Zero Dependencies**: Lightweight and minimal footprint
+- **Minimal API** — One core function (`doTransition`) and a few types. No complex configuration.
+- **Type-Safe** — Full TypeScript support with strong typing for states, context, and inputs.
+- **Immutable by Design** — Transitions return new state objects, making it easy to integrate with React, Redux, or any immutable architecture.
+- **Zero Dependencies** — Lightweight footprint with no external dependencies.
+- **Universal** — Works in Node.js, browsers, Deno, Bun, and edge runtimes.
+- **Serializable** — Built-in support for serializing and deserializing machine state.
 
 ## Installation
 
 ```bash
 npm install @minifsm/core
-# or
+```
+
+Or with other package managers:
+
+```bash
 yarn add @minifsm/core
-# or
 pnpm add @minifsm/core
 ```
 
-## Usage
+## Quick Start
 
-### Defining Your State Machine
-
-Create a state machine by defining states, transitions, and actions:
+### 1. Define Your States, Context, and Inputs
 
 ```ts
-import {FSMDefinition} from '@minifsm/core';
+import { MachineDef, BaseInput, createMachine, doTransition } from '@minifsm/core';
 
-// Define FSM states
-enum MyState {
-  START = 'START',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETE = 'COMPLETE'
+// Define your states
+type State = 'idle' | 'loading' | 'success' | 'error';
+
+// Define your context (data that persists across transitions)
+interface Context {
+  data: string | null;
+  errorMessage: string | null;
 }
 
-// Define FSM context and input types
-type MyContext = { /* Your context structure */ };
-type MyInput = { /* Your input structure */ };
+// Define your inputs (events that trigger transitions)
+type Input =
+  | { type: 'FETCH' }
+  | { type: 'SUCCESS'; data: string }
+  | { type: 'FAILURE'; error: string }
+  | { type: 'RESET' };
+```
 
-// Define FSM transitions and actions
-const fsmDefinition: FSMDefinition<MyState, MyContext, MyInput> = {
-  [MyState.START]: {
-    transitions: [
-      {
-        condition: ({context, input}) => {
-          /* Your condition */
-        },
-        nextState: MyState.IN_PROGRESS,
-        action: ({context, input}) => {
-          /* Your action */
-        }
-      }
-    ],
-    defaultTransition: {
-      nextState: MyState.START,
-      action: ({context, input}) => {/* Your default action */
-      }
+### 2. Create State Handlers
+
+Each state has a handler function that receives the current context and input, then returns the new state (or `undefined` to stay in the current state):
+
+```ts
+const definition: MachineDef<State, Context, Input> = {
+  idle: ({ context, input }) => {
+    if (input.type === 'FETCH') {
+      return { currentState: 'loading', context };
     }
+    return undefined;
   },
-  // Define transitions for other states...
+
+  loading: ({ context, input }) => {
+    if (input.type === 'SUCCESS') {
+      return {
+        currentState: 'success',
+        context: { ...context, data: input.data, errorMessage: null }
+      };
+    }
+    if (input.type === 'FAILURE') {
+      return {
+        currentState: 'error',
+        context: { ...context, data: null, errorMessage: input.error }
+      };
+    }
+    return undefined;
+  },
+
+  success: ({ context, input }) => {
+    if (input.type === 'RESET') {
+      return { currentState: 'idle', context: { data: null, errorMessage: null } };
+    }
+    return undefined;
+  },
+
+  error: ({ context, input }) => {
+    if (input.type === 'RESET') {
+      return { currentState: 'idle', context: { data: null, errorMessage: null } };
+    }
+    return undefined;
+  }
 };
 ```
 
-### Executing Transitions
-
-Trigger state transitions using the `doTransition` function:
+### 3. Create and Use the Machine
 
 ```ts
-import {doTransition, createMachine} from '@minifsm/core';
-
-// Create your initial machine
+// Create the initial machine
 const machine = createMachine({
-  currentState: MyState.START,
-  context: {/* Initial context */}
+  currentState: 'idle' as State,
+  context: { data: null, errorMessage: null }
 });
 
-// Trigger a transition
-const updatedMachine = doTransition({
-  definition: fsmDefinition,
-  input: {/* Input for the transition */},
-  machine
-});
+// Trigger transitions
+const loadingMachine = doTransition(definition, machine, { type: 'FETCH' });
+console.log(loadingMachine.currentState); // 'loading'
 
+const successMachine = doTransition(definition, loadingMachine, {
+  type: 'SUCCESS',
+  data: 'Hello, World!'
+});
+console.log(successMachine.currentState); // 'success'
+console.log(successMachine.context.data); // 'Hello, World!'
 ```
 
 ## Serialization
 
-Serialize and deserialize state machines for storage or transmission:
+Serialize machines for storage (localStorage, databases) or transmission (APIs, WebSockets):
 
 ```ts
-import {serializeMachine, deserializeMachine} from '@minifsm/core';
+import { serializeMachine, deserializeMachine } from '@minifsm/core';
 
-// Serialize FSM
-const serialized = serializeMachine(updatedMachine);
+// Serialize to JSON-compatible object
+const serialized = serializeMachine(machine);
+const json = JSON.stringify(serialized);
 
-// Deserialize FSM
-const deserializedMachine = deserializeMachine({
-  serialized,
-  definition: fsmDefinition
+// Deserialize back to a machine
+const parsed = JSON.parse(json);
+const restored = deserializeMachine({
+  serialized: parsed,
+  definition
 });
 ```
 
+## API Reference
+
+### Types
+
+| Type | Description |
+|------|-------------|
+| `MachineDef<States, Context, Inputs>` | Maps each state to its handler function |
+| `MachineState<State, Context>` | Represents a machine instance with current state and context |
+| `StateHandler<States, Context, Inputs>` | Function that processes inputs and returns new state |
+| `BaseInput<Type>` | Base interface for inputs with a `type` discriminator |
+| `SerializedMachine<Context>` | JSON-serializable representation of a machine |
+| `ContextConstraint` | Base type constraint for context objects |
+
+### Functions
+
+| Function | Description |
+|----------|-------------|
+| `doTransition(definition, machine, input)` | Executes a state transition and returns the new machine state |
+| `createMachine({ currentState, context })` | Creates a new machine instance |
+| `serializeMachine(machine)` | Converts a machine to a serializable format |
+| `deserializeMachine({ serialized, definition })` | Restores a machine from serialized data |
+
 ## Documentation
 
-For detailed API reference, advanced examples, and guides, visit the [full documentation](https://romain-bourjot.github.io/minifsm/).
+For detailed guides, advanced patterns, and API reference, visit the [full documentation](https://romain-bourjot.github.io/minifsm/).
 
 ## License
 

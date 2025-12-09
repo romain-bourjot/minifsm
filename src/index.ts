@@ -45,7 +45,7 @@ export type ContextConstraint = Record<string, unknown>
  *
  * @category Type
  *
- * @typeparam Type - The discriminator string literal type. Defaults to `string` for flexibility.
+ * @typeParam Type - The discriminator string literal type. Defaults to `string` for flexibility.
  *
  * @example
  * ```typescript
@@ -72,8 +72,8 @@ export interface BaseInput<Type extends string = string> {
  *
  * @category Type
  *
- * @typeparam State - Union of valid state string literals
- * @typeparam Context - Shape of the context data
+ * @typeParam State - Union of valid state string literals
+ * @typeParam Context - Shape of the context data
  *
  * @example
  * ```typescript
@@ -96,9 +96,9 @@ export interface MachineState<State extends string, Context> {
  *
  * @category Type
  *
- * @typeparam States - Union of all valid state string literals
- * @typeparam Context - The context type
- * @typeparam Inputs - Union of all valid input types
+ * @typeParam States - Union of all valid state string literals
+ * @typeParam Context - The context type
+ * @typeParam Inputs - Union of all valid input types
  *
  * @example
  * ```typescript
@@ -125,9 +125,9 @@ export type StateHandler<States extends string, Context, Inputs extends BaseInpu
  *
  * @category Type
  *
- * @typeparam States - Union of all valid state string literals
- * @typeparam Context - The context type
- * @typeparam Inputs - Union of all valid input types
+ * @typeParam States - Union of all valid state string literals
+ * @typeParam Context - The context type
+ * @typeParam Inputs - Union of all valid input types
  *
  * @example
  * ```typescript
@@ -160,7 +160,7 @@ export type MachineDef<States extends string, Context, Inputs extends BaseInput>
  *
  * @category Type
  *
- * @typeparam Context - Type of the FSM context.
+ * @typeParam Context - Type of the FSM context.
  */
 export interface SerializedMachine<Context> {
   currentState: string
@@ -174,9 +174,9 @@ export interface SerializedMachine<Context> {
  *
  * @category MainFunction
  *
- * @typeparam States - Union of all valid state string literals
- * @typeparam Context - The context type
- * @typeparam Inputs - Union of all valid input types
+ * @typeParam States - Union of all valid state string literals
+ * @typeParam Context - The context type
+ * @typeParam Inputs - Union of all valid input types
  *
  * @param machineDef - The state machine definition mapping states to handlers
  * @param machine - The current machine state
@@ -210,8 +210,8 @@ export function doTransition<States extends string, Context, Inputs extends Base
  *
  * @category Utils
  *
- * @typeparam State - Type of the FSM state.
- * @typeparam Context - Type of the FSM context.
+ * @typeParam State - Type of the FSM state.
+ * @typeParam Context - Type of the FSM context.
  *
  * @param proto
  * @param proto.currentState - The current state of the FSM.
@@ -237,8 +237,8 @@ export function createMachine<State extends string, Context> ({ currentState, co
  *
  * @category Utils
  *
- * @typeparam State - Type of the FSM state.
- * @typeparam Context - Type of the FSM context.
+ * @typeParam State - Type of the FSM state.
+ * @typeParam Context - Type of the FSM context.
  *
  * @param machine - The FSM to serialize.
  *
@@ -261,9 +261,9 @@ export function serializeMachine<State extends string, Context> (
  *
  * @category Utils
  *
- * @typeparam States - Union of all valid state string literals
- * @typeparam Context - The context type
- * @typeparam Inputs - Union of all valid input types
+ * @typeParam States - Union of all valid state string literals
+ * @typeParam Context - The context type
+ * @typeParam Inputs - Union of all valid input types
  *
  * @param params
  * @param params.serialized - The serialized form of the FSM.
