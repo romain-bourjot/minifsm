@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "MiniFSM"
   text: "Type-Safe State Machines"
-  tagline: "A lightweight TypeScript library for building finite state machines with zero dependencies"
+  tagline: "A lightweight, TypeScript-first library for building finite state machines. Zero dependencies. XState alternative."
   image:
     src: /miniFSM.webp
     alt: MiniFSM
@@ -29,7 +29,13 @@ features:
     details: Transitions return new state objects. Integrates seamlessly with React, Redux, or any immutable architecture.
   - icon: 📦
     title: Zero Dependencies
-    details: Lightweight footprint with no external dependencies. Works in Node.js, browsers, Deno, Bun, and edge runtimes.
+    details: Lightweight footprint with no external dependencies. Smaller than XState—perfect for performance-critical apps.
+  - icon: 🌐
+    title: Universal
+    details: Works everywhere—Node.js, browsers, Deno, Bun, and edge runtimes. One library for all your JavaScript environments.
+  - icon: 💾
+    title: Serializable
+    details: Built-in support for serializing and deserializing machine state. Perfect for persistence, debugging, and network transmission.
 ---
 
 

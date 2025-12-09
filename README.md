@@ -17,7 +17,23 @@
 [![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fromain-bourjot.github.io%2Fminifsm%2F&label=documentation)](https://romain-bourjot.github.io/minifsm/)
 [![NPM Version](https://img.shields.io/npm/v/%40minifsm%2Fcore)](https://www.npmjs.com/package/@minifsm/core)
 
-> **MiniFSM** is a lightweight TypeScript library for building finite state machines. It works in Node.js, browsers, and any JavaScript runtime. Define states as simple handler functions and let TypeScript ensure type safety across your state transitions.
+> **MiniFSM** is a lightweight, TypeScript-first library for building finite state machines (FSMs). It works in Node.js, browsers, Deno, Bun, and any JavaScript runtime. Define states as simple handler functions and let TypeScript ensure type safety across all your state transitions.
+
+---
+
+## Why MiniFSM?
+
+Looking for an **XState alternative** that's simpler and lighter? MiniFSM is designed for developers who want the power of finite state machines without the complexity:
+
+| Feature | MiniFSM | XState |
+|---------|---------|--------|
+| **Bundle Size** | ~1KB (zero deps) | ~40KB+ |
+| **Learning Curve** | Minutes | Hours/Days |
+| **API Surface** | 1 core function | 50+ concepts |
+| **TypeScript** | First-class | Retrofit |
+| **Configuration** | Plain functions | Complex objects |
+
+MiniFSM gives you **type-safe state machines** with a minimal API. No configuration DSLs, no learning curve, no runtime overhead.
 
 ---
 
@@ -29,6 +45,17 @@
 - **Zero Dependencies** — Lightweight footprint with no external dependencies.
 - **Universal** — Works in Node.js, browsers, Deno, Bun, and edge runtimes.
 - **Serializable** — Built-in support for serializing and deserializing machine state.
+
+## Use Cases
+
+MiniFSM is ideal for managing complex state in:
+
+- **Form Validation** — Track form states (pristine, dirty, valid, invalid, submitting)
+- **Authentication Flows** — Handle login states (logged out, authenticating, authenticated, error)
+- **UI Components** — Manage modal, dropdown, and wizard states
+- **Async Operations** — Model data fetching (idle, loading, success, error)
+- **Game State** — Control game phases, player turns, and animations
+- **Workflow Orchestration** — Build multi-step processes with clear state transitions
 
 ## Installation
 
@@ -60,11 +87,13 @@ interface Context {
 }
 
 // Define your inputs (events that trigger transitions)
-type Input =
-  | { type: 'FETCH' }
-  | { type: 'SUCCESS'; data: string }
-  | { type: 'FAILURE'; error: string }
-  | { type: 'RESET' };
+// Each input extends BaseInput with a specific type discriminator
+interface FetchInput extends BaseInput<'FETCH'> {}
+interface SuccessInput extends BaseInput<'SUCCESS'> { data: string }
+interface FailureInput extends BaseInput<'FAILURE'> { error: string }
+interface ResetInput extends BaseInput<'RESET'> {}
+
+type Input = FetchInput | SuccessInput | FailureInput | ResetInput;
 ```
 
 ### 2. Create State Handlers

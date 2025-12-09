@@ -60,14 +60,16 @@ Inputs are events that trigger state transitions. Our traffic light responds to:
 ```ts
 import { BaseInput } from '@minifsm/core';
 
-type TrafficLightInput =
-  | { type: 'TURN_ON' }
-  | { type: 'TURN_OFF' }
-  | { type: 'TICK'; timestamp: number };
+// Each input extends BaseInput with a specific type discriminator
+interface TurnOnInput extends BaseInput<'TURN_ON'> {}
+interface TurnOffInput extends BaseInput<'TURN_OFF'> {}
+interface TickInput extends BaseInput<'TICK'> { timestamp: number }
+
+type TrafficLightInput = TurnOnInput | TurnOffInput | TickInput;
 ```
 
 ::: tip
-The `type` field is a discriminator that helps TypeScript narrow the input type in your handlers.
+Extending `BaseInput<Type>` ensures your inputs have a `type` discriminator field. This enables type-safe discrimination in your handlers.
 :::
 
 ## Machine Definition
@@ -173,7 +175,7 @@ console.log(currentMachine.currentState); // 'GREEN'
 Here's a complete example that runs the traffic light in a loop:
 
 ```ts
-import { MachineDef, MachineState, createMachine, doTransition } from '@minifsm/core';
+import { MachineDef, MachineState, BaseInput, createMachine, doTransition } from '@minifsm/core';
 
 type TrafficLightState = 'OFF' | 'RED' | 'YELLOW' | 'GREEN';
 
@@ -182,10 +184,11 @@ interface TrafficLightContext {
   durations: { red: number; yellow: number; green: number };
 }
 
-type TrafficLightInput =
-  | { type: 'TURN_ON' }
-  | { type: 'TURN_OFF' }
-  | { type: 'TICK'; timestamp: number };
+interface TurnOnInput extends BaseInput<'TURN_ON'> {}
+interface TurnOffInput extends BaseInput<'TURN_OFF'> {}
+interface TickInput extends BaseInput<'TICK'> { timestamp: number }
+
+type TrafficLightInput = TurnOnInput | TurnOffInput | TickInput;
 
 const trafficLightDef: MachineDef<TrafficLightState, TrafficLightContext, TrafficLightInput> = {
   OFF: ({ context, input }) => {

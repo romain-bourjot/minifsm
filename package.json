@@ -1,7 +1,7 @@
 {
   "name": "@minifsm/core",
   "version": "1.0.2",
-  "description": "Minimalistic state machine",
+  "description": "A lightweight, type-safe finite state machine library for TypeScript and JavaScript with zero dependencies",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "mocha -r ts-node/register tests/**/*.spec.ts",
@@ -42,11 +42,14 @@
     "finite automata",
     "typescript",
     "state",
-    "interpreter",
     "fsm",
     "state-management",
     "library",
-    "workflow"
+    "workflow",
+    "xstate alternative",
+    "immutable",
+    "type-safe",
+    "javascript"
   ],
   "_moduleAliases": {
     "@minifsm/core": "./dist/src/index.js"
