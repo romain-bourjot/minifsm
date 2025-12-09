@@ -12,9 +12,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- testing assigns to variables */
 /* eslint-disable prefer-const -- matching documentation patterns */
 /* eslint-disable arrow-body-style -- matching documentation examples */
+/* eslint-disable @typescript-eslint/init-declarations -- matching documentation patterns */
+/* eslint-disable no-negated-condition -- matching documentation patterns */
 
 import { describe, it } from 'mocha'
 import assert from 'node:assert'
+import { z } from 'zod'
 import {
   createMachine,
   doTransition,
@@ -369,14 +372,17 @@ void describe('examples.md Counter Progress Tracker', () => {
 })
 
 // ============================================================================
-// examples.md - Traffic Light (simplified cyclic version)
+// examples.md - Traffic Light (with callbacks)
 // ============================================================================
 
 void describe('examples.md Traffic Light (Cyclic)', () => {
   type TrafficLightState = 'GREEN' | 'YELLOW' | 'RED'
 
   interface TrafficLightContext {
-    cycleCount: number
+    turnOff: () => void
+    lightRed: () => void
+    lightYellow: () => void
+    lightGreen: () => void
   }
 
   interface TickInput extends BaseInput<'tick'> {}
@@ -384,6 +390,8 @@ void describe('examples.md Traffic Light (Cyclic)', () => {
   const definition: MachineDef<TrafficLightState, TrafficLightContext, TickInput> = {
     RED: ({ context, input }) => {
       if (input.type === 'tick') {
+        context.turnOff()
+        context.lightGreen()
         return { currentState: 'GREEN', context }
       }
       return undefined
@@ -391,6 +399,8 @@ void describe('examples.md Traffic Light (Cyclic)', () => {
 
     GREEN: ({ context, input }) => {
       if (input.type === 'tick') {
+        context.turnOff()
+        context.lightYellow()
         return { currentState: 'YELLOW', context }
       }
       return undefined
@@ -398,27 +408,42 @@ void describe('examples.md Traffic Light (Cyclic)', () => {
 
     YELLOW: ({ context, input }) => {
       if (input.type === 'tick') {
-        return { currentState: 'RED', context: { cycleCount: context.cycleCount + 1 } }
+        context.turnOff()
+        context.lightRed()
+        return { currentState: 'RED', context }
       }
       return undefined
     }
   }
 
-  void it('should cycle through RED -> GREEN -> YELLOW -> RED', () => {
+  void it('should cycle through RED -> GREEN -> YELLOW -> RED with callbacks', () => {
+    // Track callback invocations for verification
+    const calls: string[] = []
+
     let machine: MachineState<TrafficLightState, TrafficLightContext> = {
       currentState: 'RED',
-      context: { cycleCount: 0 }
+      context: {
+        turnOff: () => calls.push('turnOff'),
+        lightRed: () => calls.push('lightRed'),
+        lightYellow: () => calls.push('lightYellow'),
+        lightGreen: () => calls.push('lightGreen')
+      }
     }
 
+    // RED -> GREEN
     machine = doTransition(definition, machine, { type: 'tick' })
     assert.strictEqual(machine.currentState, 'GREEN')
+    assert.deepStrictEqual(calls, ['turnOff', 'lightGreen'])
 
+    // GREEN -> YELLOW
     machine = doTransition(definition, machine, { type: 'tick' })
     assert.strictEqual(machine.currentState, 'YELLOW')
+    assert.deepStrictEqual(calls, ['turnOff', 'lightGreen', 'turnOff', 'lightYellow'])
 
+    // YELLOW -> RED
     machine = doTransition(definition, machine, { type: 'tick' })
     assert.strictEqual(machine.currentState, 'RED')
-    assert.strictEqual(machine.context.cycleCount, 1)
+    assert.deepStrictEqual(calls, ['turnOff', 'lightGreen', 'turnOff', 'lightYellow', 'turnOff', 'lightRed'])
   })
 })
 
@@ -1115,5 +1140,455 @@ void describe('examples.md Common Patterns', () => {
       const result = doTransition(definition, machine, { type: 'CONFIRM' })
       assert.strictEqual(result.currentState, 'SELECTED')
     })
+  })
+})
+
+// ============================================================================
+// serialization.md - LocalStorage Persistence Pattern
+// ============================================================================
+
+void describe('serialization.md LocalStorage Persistence', () => {
+  type State = 'idle' | 'loading' | 'success'
+
+  interface Context {
+    data: string | null
+    timestamp: number
+  }
+
+  interface FetchInput extends BaseInput<'FETCH'> {}
+
+  const definition: MachineDef<State, Context, FetchInput> = {
+    idle: ({ context, input }) => {
+      if (input.type === 'FETCH') {
+        return { currentState: 'loading', context }
+      }
+      return undefined
+    },
+    loading: () => undefined,
+    success: () => undefined
+  }
+
+  // Mock localStorage for testing
+  let storage: Map<string, string>
+
+  function saveState (key: string, machine: MachineState<State, Context>): void {
+    const serialized = serializeMachine(machine)
+    storage.set(key, JSON.stringify(serialized))
+  }
+
+  function loadState (key: string): MachineState<State, Context> {
+    const json = storage.get(key)
+
+    if (json !== undefined) {
+      try {
+        const serialized = JSON.parse(json) as SerializedMachine<Context>
+        return deserializeMachine({ serialized, definition })
+      } catch {
+        // Failed to restore state, use initial state
+      }
+    }
+
+    return createMachine({
+      currentState: 'idle',
+      context: { data: null, timestamp: 0 }
+    })
+  }
+
+  void it('should save and restore state', () => {
+    storage = new Map()
+    const STORAGE_KEY = 'app-machine-state'
+
+    // Create and save a machine
+    let machine = createMachine({
+      currentState: 'success' as State,
+      context: { data: 'test data', timestamp: 123456 }
+    })
+
+    saveState(STORAGE_KEY, machine)
+
+    // Load from storage
+    const restored = loadState(STORAGE_KEY)
+
+    assert.strictEqual(restored.currentState, 'success')
+    assert.strictEqual(restored.context.data, 'test data')
+    assert.strictEqual(restored.context.timestamp, 123456)
+  })
+
+  void it('should return initial state when storage is empty', () => {
+    storage = new Map()
+
+    const machine = loadState('nonexistent-key')
+
+    assert.strictEqual(machine.currentState, 'idle')
+    assert.strictEqual(machine.context.data, null)
+  })
+
+  void it('should return initial state on invalid JSON', () => {
+    storage = new Map()
+    storage.set('bad-key', 'not valid json')
+
+    const machine = loadState('bad-key')
+
+    assert.strictEqual(machine.currentState, 'idle')
+  })
+})
+
+// ============================================================================
+// serialization.md - Session Recovery with Fallback
+// ============================================================================
+
+void describe('serialization.md Session Recovery with Fallback', () => {
+  type State = 'step1' | 'step2' | 'step3'
+
+  interface Context {
+    formData: Record<string, string>
+    completedSteps: string[]
+  }
+
+  interface NextInput extends BaseInput<'NEXT'> {}
+
+  const definition: MachineDef<State, Context, NextInput> = {
+    step1: ({ context, input }) => {
+      if (input.type === 'NEXT') {
+        return { currentState: 'step2', context: { ...context, completedSteps: [...context.completedSteps, 'step1'] } }
+      }
+      return undefined
+    },
+    step2: ({ context, input }) => {
+      if (input.type === 'NEXT') {
+        return { currentState: 'step3', context: { ...context, completedSteps: [...context.completedSteps, 'step2'] } }
+      }
+      return undefined
+    },
+    step3: () => undefined
+  }
+
+  // Mock sessionStorage for testing
+  let sessionStorage: Map<string, string>
+
+  function initializeMachine (): MachineState<State, Context> {
+    const saved = sessionStorage.get('wizard-state')
+
+    if (saved !== undefined) {
+      try {
+        return deserializeMachine({
+          serialized: JSON.parse(saved) as SerializedMachine<Context>,
+          definition
+        })
+      } catch {
+        // State format changed or corrupted - start fresh
+        sessionStorage.delete('wizard-state')
+      }
+    }
+
+    // Default initial state
+    return createMachine({
+      currentState: 'step1',
+      context: { formData: {}, completedSteps: [] }
+    })
+  }
+
+  void it('should recover session from saved state', () => {
+    sessionStorage = new Map()
+    sessionStorage.set('wizard-state', JSON.stringify({
+      currentState: 'step2',
+      context: { formData: { name: 'Alice' }, completedSteps: ['step1'] }
+    }))
+
+    const machine = initializeMachine()
+
+    assert.strictEqual(machine.currentState, 'step2')
+    assert.deepStrictEqual(machine.context.completedSteps, ['step1'])
+  })
+
+  void it('should start fresh when session is corrupted', () => {
+    sessionStorage = new Map()
+    sessionStorage.set('wizard-state', JSON.stringify({
+      currentState: 'invalid_state',
+      context: { formData: {}, completedSteps: [] }
+    }))
+
+    const machine = initializeMachine()
+
+    assert.strictEqual(machine.currentState, 'step1')
+    assert.strictEqual(sessionStorage.has('wizard-state'), false) // Should be cleared
+  })
+})
+
+// ============================================================================
+// serialization.md - Versioned Context for Migrations
+// ============================================================================
+
+void describe('serialization.md Versioned Context for Migrations', () => {
+  interface VersionedContext {
+    version: number
+    data: string | null
+  }
+
+  function migrateContext (context: Partial<VersionedContext>): VersionedContext {
+    // Handle missing version (old format)
+    if (context.version === undefined) {
+      return { version: 1, data: null }
+    }
+    // Future migrations can be added here
+    return context as VersionedContext
+  }
+
+  void it('should migrate context without version to version 1', () => {
+    const oldContext: Partial<VersionedContext> = { data: 'old data' }
+    const migrated = migrateContext(oldContext)
+
+    assert.strictEqual(migrated.version, 1)
+    assert.strictEqual(migrated.data, null) // Reset data on migration
+  })
+
+  void it('should preserve context with valid version', () => {
+    const context: VersionedContext = { version: 1, data: 'current data' }
+    const migrated = migrateContext(context)
+
+    assert.strictEqual(migrated.version, 1)
+    assert.strictEqual(migrated.data, 'current data')
+  })
+})
+
+// ============================================================================
+// serialization.md - Runtime Validation with Zod
+// ============================================================================
+
+void describe('serialization.md Runtime Validation with Zod', () => {
+  // Define your context schema
+  const contextSchema = z.object({
+    userId: z.string(),
+    items: z.array(z.string()),
+    preferences: z.object({
+      theme: z.enum(['light', 'dark']),
+      notifications: z.boolean()
+    })
+  })
+
+  type Context = z.infer<typeof contextSchema>
+
+  // Define valid states
+  const stateSchema = z.enum(['idle', 'loading', 'success', 'error'])
+
+  type State = z.infer<typeof stateSchema>
+
+  // Serialized machine schema
+  const serializedMachineSchema = z.object({
+    currentState: stateSchema,
+    context: contextSchema
+  })
+
+  interface FetchInput extends BaseInput<'FETCH'> {}
+
+  const definition: MachineDef<State, Context, FetchInput> = {
+    idle: ({ context }) => {
+      return { currentState: 'loading', context }
+    },
+    loading: () => undefined,
+    success: () => undefined,
+    error: () => undefined
+  }
+
+  // Safe deserialization with validation
+  function safeDeserialize (json: string): MachineState<State, Context> {
+    try {
+      const parsed: unknown = JSON.parse(json)
+      const validated = serializedMachineSchema.parse(parsed)
+
+      return deserializeMachine({
+        serialized: validated,
+        definition
+      })
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Validation failed - errors are logged in documentation example
+      }
+
+      // Return default state on validation failure
+      return createMachine({
+        currentState: 'idle',
+        context: {
+          userId: '',
+          items: [],
+          preferences: { theme: 'light', notifications: true }
+        }
+      })
+    }
+  }
+
+  void it('should deserialize valid JSON with Zod validation', () => {
+    const validJson = JSON.stringify({
+      currentState: 'success',
+      context: {
+        userId: 'user-123',
+        items: ['item1', 'item2'],
+        preferences: { theme: 'dark', notifications: false }
+      }
+    })
+
+    const machine = safeDeserialize(validJson)
+
+    assert.strictEqual(machine.currentState, 'success')
+    assert.strictEqual(machine.context.userId, 'user-123')
+    assert.deepStrictEqual(machine.context.items, ['item1', 'item2'])
+    assert.strictEqual(machine.context.preferences.theme, 'dark')
+  })
+
+  void it('should return default state on invalid context structure', () => {
+    const invalidJson = JSON.stringify({
+      currentState: 'idle',
+      context: {
+        userId: 123, // Should be string
+        items: 'not-an-array', // Should be array
+        preferences: { theme: 'invalid' } // Missing notifications, invalid theme
+      }
+    })
+
+    const machine = safeDeserialize(invalidJson)
+
+    // Should fall back to default state
+    assert.strictEqual(machine.currentState, 'idle')
+    assert.strictEqual(machine.context.userId, '')
+    assert.deepStrictEqual(machine.context.items, [])
+    assert.strictEqual(machine.context.preferences.theme, 'light')
+    assert.strictEqual(machine.context.preferences.notifications, true)
+  })
+
+  void it('should return default state on invalid state value', () => {
+    const invalidJson = JSON.stringify({
+      currentState: 'unknown_state', // Invalid state
+      context: {
+        userId: 'user-123',
+        items: [],
+        preferences: { theme: 'light', notifications: true }
+      }
+    })
+
+    const machine = safeDeserialize(invalidJson)
+
+    // Should fall back to default state
+    assert.strictEqual(machine.currentState, 'idle')
+  })
+
+  void it('should return default state on malformed JSON', () => {
+    const machine = safeDeserialize('not valid json {{{')
+
+    assert.strictEqual(machine.currentState, 'idle')
+    assert.strictEqual(machine.context.userId, '')
+  })
+})
+
+// ============================================================================
+// integrations.md - Node.js OrderService
+// ============================================================================
+
+void describe('integrations.md Node.js OrderService', () => {
+  type OrderState = 'pending' | 'processing' | 'shipped' | 'delivered'
+
+  interface OrderContext {
+    orderId: string
+    items: string[]
+    total: number
+  }
+
+  interface ProcessInput extends BaseInput<'PROCESS'> {}
+  interface ShipInput extends BaseInput<'SHIP'> {}
+  interface DeliverInput extends BaseInput<'DELIVER'> {}
+
+  type OrderInput = ProcessInput | ShipInput | DeliverInput
+
+  const orderDefinition: MachineDef<OrderState, OrderContext, OrderInput> = {
+    pending: ({ context, input }) => {
+      if (input.type === 'PROCESS') {
+        return { currentState: 'processing', context }
+      }
+      return undefined
+    },
+    processing: ({ context, input }) => {
+      if (input.type === 'SHIP') {
+        return { currentState: 'shipped', context }
+      }
+      return undefined
+    },
+    shipped: ({ context, input }) => {
+      if (input.type === 'DELIVER') {
+        return { currentState: 'delivered', context }
+      }
+      return undefined
+    },
+    delivered: () => undefined
+  }
+
+  class OrderService {
+    private readonly machines = new Map<string, MachineState<OrderState, OrderContext>>()
+
+    createOrder (orderId: string): void {
+      this.machines.set(orderId, createMachine({
+        currentState: 'pending',
+        context: { orderId, items: [], total: 0 }
+      }))
+    }
+
+    processEvent (orderId: string, input: OrderInput): void {
+      const machine = this.machines.get(orderId)
+      if (machine !== undefined) {
+        this.machines.set(orderId, doTransition(orderDefinition, machine, input))
+      }
+    }
+
+    getOrderState (orderId: string): SerializedMachine<OrderContext> | null {
+      const machine = this.machines.get(orderId)
+      return machine !== undefined ? serializeMachine(machine) : null
+    }
+  }
+
+  void it('should create and track orders', () => {
+    const service = new OrderService()
+
+    service.createOrder('order-123')
+    const state = service.getOrderState('order-123')
+
+    assert.notStrictEqual(state, null)
+    assert.strictEqual(state?.currentState, 'pending')
+    assert.strictEqual(state?.context.orderId, 'order-123')
+  })
+
+  void it('should process order through full lifecycle', () => {
+    const service = new OrderService()
+
+    service.createOrder('order-456')
+
+    // Process the order
+    service.processEvent('order-456', { type: 'PROCESS' })
+    let state = service.getOrderState('order-456')
+    assert.strictEqual(state?.currentState, 'processing')
+
+    // Ship the order
+    service.processEvent('order-456', { type: 'SHIP' })
+    state = service.getOrderState('order-456')
+    assert.strictEqual(state?.currentState, 'shipped')
+
+    // Deliver the order
+    service.processEvent('order-456', { type: 'DELIVER' })
+    state = service.getOrderState('order-456')
+    assert.strictEqual(state?.currentState, 'delivered')
+  })
+
+  void it('should return null for unknown orders', () => {
+    const service = new OrderService()
+
+    const state = service.getOrderState('nonexistent')
+    assert.strictEqual(state, null)
+  })
+
+  void it('should ignore events for unknown orders', () => {
+    const service = new OrderService()
+
+    // Should not throw
+    service.processEvent('nonexistent', { type: 'PROCESS' })
+
+    const state = service.getOrderState('nonexistent')
+    assert.strictEqual(state, null)
   })
 })

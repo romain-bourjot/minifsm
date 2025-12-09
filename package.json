@@ -58,14 +58,23 @@
   "license": "MIT",
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "1.0.2",
+    "@reduxjs/toolkit": "2.11.1",
     "@types/mocha": "10.0.10",
     "@types/module-alias": "2.0.4",
     "@types/node": "24.10.1",
+    "@types/pg": "8.15.6",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
     "eslint": "^9.39.0",
     "eslint-config-love": "^136.0.0",
     "mocha": "11.7.5",
     "module-alias": "2.2.3",
+    "mongodb": "7.0.0",
+    "next": "16.0.8",
     "nyc": "17.1.0",
+    "pg": "8.16.3",
+    "react-redux": "9.2.0",
+    "svelte": "5.45.8",
     "terser": "5.44.1",
     "ts-node": "10.9.2",
     "typedoc-plugin-include-example": "3.0.2",
@@ -73,7 +82,8 @@
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.9.3",
     "vitepress": "2.0.0-alpha.15",
-    "vue": "3.5.25"
+    "vue": "3.5.25",
+    "zod": "4.1.13"
   },
   "packageManager": "yarn@4.5.3+sha512.3003a14012e2987072d244c720506549c1aab73ee728208f1b2580a9fd67b92d61ba6b08fe93f6dce68fd771e3af1e59a0afa28dd242dd0940d73b95fedd4e90"
 }

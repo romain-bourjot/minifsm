@@ -336,7 +336,7 @@ function tokenize(text: string): string[] {
 }
 
 console.log(tokenize("don't stop believin'"));
-// ["don't", "stop", "believin'"]
+// ["don't", "stop", "believin"]
 ```
 
 ## User Lifecycle
