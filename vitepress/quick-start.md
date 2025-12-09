@@ -253,5 +253,8 @@ setTimeout(() => {
 
 ## Next Steps
 
-- Explore the [API Reference](/typedoc/) for detailed documentation
-- Check out more examples in the [GitHub repository](https://github.com/romain-bourjot/minifsm/tree/main/examples)
+- Explore more [Examples](/examples) including vending machines, word counters, and user lifecycles
+- Learn about [Serialization](/serialization) for persisting state to localStorage or databases
+- See [Framework Integrations](/integrations) for React, Redux, Vue, and Svelte usage
+- Read the [API Reference](/typedoc/) for detailed function and type documentation
+- Check out the [GitHub repository](https://github.com/romain-bourjot/minifsm) for source code and issues

@@ -2,10 +2,10 @@
   <br />
 
   <picture>
-    <img alt="MiniFSM logotype" src="./vitepress/public/miniFSM.webp" width="200" />
+    <img alt="MiniFSM - Lightweight TypeScript Finite State Machine Library" src="./vitepress/public/miniFSM.webp" width="200" />
   </picture>
     <br/>
-    <strong>A lightweight, type-safe finite state machine library for TypeScript</strong>
+    <strong>A lightweight, type-safe finite state machine library for TypeScript and JavaScript</strong>
   <br />
   <br />
 </p>
@@ -16,8 +16,10 @@
 
 [![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fromain-bourjot.github.io%2Fminifsm%2F&label=documentation)](https://romain-bourjot.github.io/minifsm/)
 [![NPM Version](https://img.shields.io/npm/v/%40minifsm%2Fcore)](https://www.npmjs.com/package/@minifsm/core)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@minifsm/core)](https://bundlephobia.com/package/@minifsm/core)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
-> **MiniFSM** is a lightweight, TypeScript-first library for building finite state machines (FSMs). It works in Node.js, browsers, Deno, Bun, and any JavaScript runtime. Define states as simple handler functions and let TypeScript ensure type safety across all your state transitions.
+> **MiniFSM** is a lightweight, TypeScript-first finite state machine (FSM) library with zero dependencies. Build predictable state machines for Node.js, browsers, Deno, Bun, and any JavaScript runtime. Define states as simple handler functions with full type safety for states, context, and transitions.
 
 ---
 
@@ -162,9 +164,9 @@ console.log(successMachine.currentState); // 'success'
 console.log(successMachine.context.data); // 'Hello, World!'
 ```
 
-## Serialization
+## Serialization and Persistence
 
-Serialize machines for storage (localStorage, databases) or transmission (APIs, WebSockets):
+MiniFSM provides built-in serialization for storing state machines in databases, localStorage, or transmitting over networks:
 
 ```ts
 import { serializeMachine, deserializeMachine } from '@minifsm/core';
@@ -173,39 +175,151 @@ import { serializeMachine, deserializeMachine } from '@minifsm/core';
 const serialized = serializeMachine(machine);
 const json = JSON.stringify(serialized);
 
-// Deserialize back to a machine
-const parsed = JSON.parse(json);
+// Store in localStorage
+localStorage.setItem('machine-state', json);
+
+// Later, deserialize back to a machine
+const parsed = JSON.parse(localStorage.getItem('machine-state'));
 const restored = deserializeMachine({
   serialized: parsed,
   definition
 });
 ```
 
+### Error Handling
+
+The `deserializeMachine` function validates the serialized state against your definition:
+
+```ts
+try {
+  const restored = deserializeMachine({
+    serialized: { currentState: 'unknown', context: {} },
+    definition
+  });
+} catch (error) {
+  // Throws: "MINIFSM_DESERIALIZE_ERROR: Unable to find corresponding state!"
+  console.error('Invalid state in serialized data');
+}
+```
+
 ## API Reference
 
-### Types
+### Core Types
 
 | Type | Description |
 |------|-------------|
-| `MachineDef<States, Context, Inputs>` | Maps each state to its handler function |
-| `MachineState<State, Context>` | Represents a machine instance with current state and context |
-| `StateHandler<States, Context, Inputs>` | Function that processes inputs and returns new state |
-| `BaseInput<Type>` | Base interface for inputs with a `type` discriminator |
-| `SerializedMachine<Context>` | JSON-serializable representation of a machine |
-| `ContextConstraint` | Base type constraint for context objects |
+| `MachineDef<States, Context, Inputs>` | The state machine definition that maps each state to its handler function |
+| `MachineState<State, Context>` | Represents a machine instance with `currentState` and `context` properties |
+| `StateHandler<States, Context, Inputs>` | Handler function that receives `{ context, input }` and returns new state or `undefined` |
+| `BaseInput<Type>` | Base interface for inputs requiring a `type` discriminator field |
+| `SerializedMachine<Context>` | JSON-serializable representation of a machine for persistence |
+| `ContextConstraint` | Base type constraint ensuring context is `Record<string, unknown>` |
 
 ### Functions
 
-| Function | Description |
-|----------|-------------|
-| `doTransition(definition, machine, input)` | Executes a state transition and returns the new machine state |
-| `createMachine({ currentState, context })` | Creates a new machine instance |
-| `serializeMachine(machine)` | Converts a machine to a serializable format |
-| `deserializeMachine({ serialized, definition })` | Restores a machine from serialized data |
+| Function | Parameters | Returns | Description |
+|----------|------------|---------|-------------|
+| `doTransition` | `(definition, machine, input)` | `MachineState` | Executes a state transition based on the current state's handler |
+| `createMachine` | `({ currentState, context })` | `MachineState` | Creates a new machine instance with initial state and context |
+| `serializeMachine` | `(machine)` | `SerializedMachine` | Converts a machine to a JSON-serializable format |
+| `deserializeMachine` | `({ serialized, definition })` | `MachineState` | Restores a machine from serialized data (throws if state invalid) |
+
+## Examples
+
+The repository includes several example implementations:
+
+- **[Counter](./examples/counter.ts)** — Progress tracker with START, IN_PROGRESS, and COMPLETE states
+- **[Traffic Light](./examples/traffic-light.ts)** — Cyclic state machine (RED → GREEN → YELLOW → RED)
+- **[Vending Machine](./examples/vending-machine.ts)** — Multi-input handling (selection, payment, dispensing)
+- **[Word Counter](./examples/word-counter.ts)** — Text tokenizer using FSM for parsing
+- **[User Machine](./examples/user-machine.ts)** — User lifecycle (validation, deletion)
+
+Run an example:
+
+```bash
+npm run example:counter
+```
+
+## Frequently Asked Questions
+
+### How does MiniFSM compare to XState?
+
+MiniFSM is designed as a lightweight alternative to XState. While XState offers advanced features like hierarchical states, parallel states, and a visual editor, MiniFSM focuses on simplicity:
+
+- **~1KB** vs ~40KB+ bundle size
+- **4 functions** vs 50+ concepts to learn
+- **Plain TypeScript functions** vs configuration DSL
+- **Zero dependencies** vs multiple dependencies
+
+Choose MiniFSM for simpler state machines where you want minimal overhead and fast TypeScript development.
+
+### Can I use MiniFSM with React?
+
+Yes. Since MiniFSM returns new immutable state objects on transitions, it integrates naturally with React state:
+
+```tsx
+const [machine, setMachine] = useState(() => createMachine({ currentState: 'idle', context: {} }));
+
+const handleAction = () => {
+  setMachine(current => doTransition(definition, current, { type: 'ACTION' }));
+};
+```
+
+### Can I use MiniFSM with Redux?
+
+Yes. Store the machine state in your Redux store and dispatch actions that call `doTransition` in a reducer:
+
+```ts
+const machineReducer = (state = initialMachine, action) => {
+  if (action.type === 'FSM_INPUT') {
+    return doTransition(definition, state, action.payload);
+  }
+  return state;
+};
+```
+
+### What happens if no transition matches?
+
+If a state handler returns `undefined`, the machine stays in its current state with unchanged context. This is the expected behavior for inputs that don't trigger transitions in the current state.
+
+### Is the context mutated during transitions?
+
+No. MiniFSM is immutable by design. Handlers should return new context objects using spread syntax or other immutable update patterns. The original machine and context are never modified.
+
+## TypeScript Support
+
+MiniFSM is written in TypeScript and provides full type inference:
+
+- State handlers receive correctly typed `context` and `input` parameters
+- The `currentState` field is constrained to your defined state union
+- Input discrimination works automatically with the `type` field
+- Compile-time errors for missing state handlers or invalid transitions
+
+```ts
+// TypeScript catches errors at compile time
+const definition: MachineDef<'a' | 'b', Context, Input> = {
+  a: handler,
+  // Error: Property 'b' is missing
+};
+```
+
+## Browser and Runtime Support
+
+MiniFSM works in any JavaScript environment:
+
+- **Node.js** 14+
+- **Modern browsers** (Chrome, Firefox, Safari, Edge)
+- **Deno**
+- **Bun**
+- **Edge runtimes** (Cloudflare Workers, Vercel Edge)
 
 ## Documentation
 
-For detailed guides, advanced patterns, and API reference, visit the [full documentation](https://romain-bourjot.github.io/minifsm/).
+For detailed guides, API reference, and interactive examples, visit the [full documentation](https://romain-bourjot.github.io/minifsm/).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests on [GitHub](https://github.com/romain-bourjot/minifsm).
 
 ## License
 
