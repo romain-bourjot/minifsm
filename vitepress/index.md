@@ -43,12 +43,6 @@ features:
 
 
 <style>
-:root {
-    --vp-home-hero-name-background: linear-gradient( -45deg, #22515C 30%, #00baf8 );
-    --vp-home-hero-image-background-image: transparent; /* linear-gradient( -45deg, #22515C 50%, #00baf8 50% ); */
-/* #bd34fe bd34fe */
-}
-
 .VPImage.image-src {
     transform: translate(-50%, -50%);
     animation: float 24s ease-in-out infinite alternate;

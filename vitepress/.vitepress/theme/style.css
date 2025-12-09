@@ -1,58 +1,48 @@
 /**
- * Customize default theme styling by overriding CSS variables:
+ * MiniFSM VitePress Theme
+ * Teal/Cyan color scheme with enhanced polish
  * https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css
  */
+
+/**
+ * Custom Teal/Cyan Color Palette
+ * Based on hero gradient: #22515C (dark teal) to #00baf8 (cyan)
+ * -------------------------------------------------------------------------- */
+
+:root {
+  /* Custom teal palette - following VitePress color system conventions */
+  --vp-c-teal-1: #0d9488;      /* Solid color for text (contrast-safe) */
+  --vp-c-teal-2: #14b8a6;      /* Hover state */
+  --vp-c-teal-3: #22515C;      /* Solid background (dark teal from hero) */
+  --vp-c-teal-soft: rgba(20, 184, 166, 0.14);  /* Subtle background */
+
+  /* Cyan accent for gradients and highlights */
+  --vp-c-cyan-1: #00baf8;      /* Bright cyan from hero */
+  --vp-c-cyan-2: #22d3ee;      /* Lighter cyan for accents */
+  --vp-c-cyan-3: #06b6d4;      /* Medium cyan */
+
+  /* Additional accent colors for visual interest */
+  --vp-c-purple-1: #8b5cf6;
+  --vp-c-purple-soft: rgba(139, 92, 246, 0.12);
+}
 
 /**
  * Colors
  *
  * Each colors have exact same color scale system with 3 levels of solid
  * colors with different brightness, and 1 soft color.
- * 
- * - `XXX-1`: The most solid color used mainly for colored text. It must
- *   satisfy the contrast ratio against when used on top of `XXX-soft`.
- *
- * - `XXX-2`: The color used mainly for hover state of the button.
- *
- * - `XXX-3`: The color for solid background, such as bg color of the button.
- *   It must satisfy the contrast ratio with pure white (#ffffff) text on
- *   top of it.
- *
- * - `XXX-soft`: The color used for subtle background such as custom container
- *   or badges. It must satisfy the contrast ratio when putting `XXX-1` colors
- *   on top of it.
- *
- *   The soft color must be semi transparent alpha channel. This is crucial
- *   because it allows adding multiple "soft" colors on top of each other
- *   to create a accent, such as when having inline code block inside
- *   custom containers.
- *
- * - `default`: The color used purely for subtle indication without any
- *   special meanings attched to it such as bg color for menu hover state.
- *
- * - `brand`: Used for primary brand colors, such as link text, button with
- *   brand theme, etc.
- *
- * - `tip`: Used to indicate useful information. The default theme uses the
- *   brand color for this by default.
- *
- * - `warning`: Used to indicate warning to the users. Used in custom
- *   container, badges, etc.
- *
- * - `danger`: Used to show error, or dangerous message to the users. Used
- *   in custom container, badges, etc.
  * -------------------------------------------------------------------------- */
 
- :root {
+:root {
   --vp-c-default-1: var(--vp-c-gray-1);
   --vp-c-default-2: var(--vp-c-gray-2);
   --vp-c-default-3: var(--vp-c-gray-3);
   --vp-c-default-soft: var(--vp-c-gray-soft);
 
-  --vp-c-brand-1: var(--vp-c-indigo-1);
-  --vp-c-brand-2: var(--vp-c-indigo-2);
-  --vp-c-brand-3: var(--vp-c-indigo-3);
-  --vp-c-brand-soft: var(--vp-c-indigo-soft);
+  --vp-c-brand-1: var(--vp-c-teal-1);
+  --vp-c-brand-2: var(--vp-c-teal-2);
+  --vp-c-brand-3: var(--vp-c-teal-3);
+  --vp-c-brand-soft: var(--vp-c-teal-soft);
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-2: var(--vp-c-brand-2);
@@ -87,21 +77,55 @@
 }
 
 /**
- * Component: Home
+ * Component: Button - Enhanced Styles
+ * -------------------------------------------------------------------------- */
+
+.VPButton.brand {
+  background: linear-gradient(135deg, var(--vp-c-teal-3) 0%, var(--vp-c-teal-2) 100%);
+  box-shadow: 0 4px 14px rgba(34, 81, 92, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.VPButton.brand:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 81, 92, 0.35);
+  background: linear-gradient(135deg, var(--vp-c-teal-2) 0%, var(--vp-c-cyan-3) 100%);
+}
+
+.VPButton.brand:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(34, 81, 92, 0.2);
+}
+
+.VPButton.alt {
+  border-color: var(--vp-c-teal-2);
+  color: var(--vp-c-teal-1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.VPButton.alt:hover {
+  border-color: var(--vp-c-teal-1);
+  background-color: var(--vp-c-teal-soft);
+  transform: translateY(-2px);
+}
+
+/**
+ * Component: Home/Hero
  * -------------------------------------------------------------------------- */
 
 :root {
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(
-    120deg,
-    #bd34fe 30%,
-    #41d1ff
+  --vp-home-hero-name-background: linear-gradient(
+    135deg,
+    #22515C 0%,
+    #0d9488 40%,
+    #00baf8 100%
   );
 
   --vp-home-hero-image-background-image: linear-gradient(
     -45deg,
-    #bd34fe 50%,
-    #47caff 50%
+    #22515C 50%,
+    #00baf8 50%
   );
   --vp-home-hero-image-filter: blur(44px);
 }
@@ -118,22 +142,382 @@
   }
 }
 
-/**
- * Component: Custom Block
- * -------------------------------------------------------------------------- */
+/* Enhanced hero section */
+.VPHero {
+  position: relative;
+}
 
-:root {
-  --vp-custom-block-tip-border: transparent;
-  --vp-custom-block-tip-text: var(--vp-c-text-1);
-  --vp-custom-block-tip-bg: var(--vp-c-brand-soft);
-  --vp-custom-block-tip-code-bg: var(--vp-c-brand-soft);
+.VPHero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(20, 184, 166, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(0, 186, 248, 0.08), transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.VPHero .name {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.VPHero .text {
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--vp-c-text-1) 0%, var(--vp-c-text-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.VPHero .tagline {
+  font-size: 1.2em;
+  line-height: 1.5;
+  opacity: 0.9;
 }
 
 /**
- * Component: Algolia
+ * Component: Feature Cards - Enhanced Styles
+ * -------------------------------------------------------------------------- */
+
+.VPFeatures {
+  position: relative;
+}
+
+.VPFeatures::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--vp-c-teal-soft), var(--vp-c-cyan-2), var(--vp-c-teal-soft), transparent);
+}
+
+.VPFeature {
+  background: linear-gradient(135deg, var(--vp-c-bg-soft) 0%, var(--vp-c-bg) 100%);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.VPFeature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--vp-c-teal-3), var(--vp-c-cyan-1));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.VPFeature:hover::before {
+  opacity: 1;
+}
+
+.VPFeature:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 20px 40px rgba(34, 81, 92, 0.15),
+    0 8px 16px rgba(0, 186, 248, 0.08);
+  border-color: rgba(20, 184, 166, 0.3);
+  background: linear-gradient(135deg, var(--vp-c-bg) 0%, rgba(20, 184, 166, 0.03) 100%);
+}
+
+.VPFeature .icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--vp-c-teal-soft) 0%, rgba(0, 186, 248, 0.08) 100%);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.VPFeature:hover .icon {
+  transform: scale(1.1) rotate(-3deg);
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(0, 186, 248, 0.15) 100%);
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+}
+
+.VPFeature .title {
+  color: var(--vp-c-text-1);
+  font-weight: 700;
+  font-size: 1.1em;
+  transition: color 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.VPFeature:hover .title {
+  color: var(--vp-c-teal-1);
+}
+
+.VPFeature .details {
+  color: var(--vp-c-text-2);
+  line-height: 1.7;
+  font-size: 0.95em;
+}
+
+/**
+ * Component: Custom Containers - Enhanced Styles
+ * -------------------------------------------------------------------------- */
+
+:root {
+  --vp-custom-block-tip-border: var(--vp-c-teal-2);
+  --vp-custom-block-tip-text: var(--vp-c-text-1);
+  --vp-custom-block-tip-bg: var(--vp-c-teal-soft);
+  --vp-custom-block-tip-code-bg: rgba(20, 184, 166, 0.08);
+}
+
+.custom-block {
+  border-radius: 8px;
+  transition: box-shadow 0.2s ease;
+}
+
+.custom-block:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.custom-block.tip {
+  border-left: 4px solid var(--vp-c-teal-2);
+}
+
+.custom-block.warning {
+  border-left: 4px solid var(--vp-c-warning-2);
+}
+
+.custom-block.danger {
+  border-left: 4px solid var(--vp-c-danger-2);
+}
+
+.custom-block.info {
+  border-left: 4px solid var(--vp-c-brand-2);
+}
+
+/**
+ * Component: Code Blocks - Enhanced Styles
+ * -------------------------------------------------------------------------- */
+
+div[class*='language-'] {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease;
+}
+
+div[class*='language-']:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+div[class*='language-'] > span.lang {
+  color: var(--vp-c-teal-1);
+  font-weight: 500;
+}
+
+div[class*='language-'] > button.copy {
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+div[class*='language-'] > button.copy:hover {
+  background-color: var(--vp-c-teal-soft);
+}
+
+div[class*='language-'] > button.copy.copied {
+  background-color: var(--vp-c-teal-soft);
+}
+
+:not(pre) > code {
+  background-color: var(--vp-c-teal-soft);
+  color: var(--vp-c-teal-1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/**
+ * Component: Navigation - Enhanced Styles
+ * -------------------------------------------------------------------------- */
+
+.VPNavBarMenuLink:hover,
+.VPNavScreenMenuLink:hover {
+  color: var(--vp-c-teal-1);
+}
+
+.VPNavBarMenuLink.active {
+  color: var(--vp-c-teal-1);
+}
+
+.VPSidebarItem .link {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.VPSidebarItem .link:hover {
+  color: var(--vp-c-teal-1);
+  background-color: var(--vp-c-teal-soft);
+}
+
+.VPSidebarItem.is-active > .item > .link {
+  color: var(--vp-c-teal-1);
+}
+
+.VPSidebarItem.is-active > .item > .link::before {
+  background-color: var(--vp-c-teal-2);
+}
+
+/**
+ * Component: Links and Selection
+ * -------------------------------------------------------------------------- */
+
+.vp-doc a {
+  color: var(--vp-c-teal-1);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.vp-doc a:hover {
+  border-bottom-color: var(--vp-c-teal-2);
+}
+
+::selection {
+  background-color: var(--vp-c-teal-soft);
+  color: var(--vp-c-text-1);
+}
+
+:focus-visible {
+  outline: 2px solid var(--vp-c-teal-2);
+  outline-offset: 2px;
+}
+
+/**
+ * Component: Search (Algolia/Local)
  * -------------------------------------------------------------------------- */
 
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
 
+/**
+ * Component: Footer - Enhanced Styles
+ * -------------------------------------------------------------------------- */
+
+.VPFooter {
+  border-top: 1px solid transparent;
+  background:
+    linear-gradient(var(--vp-c-bg), var(--vp-c-bg)) padding-box,
+    linear-gradient(90deg, transparent 10%, var(--vp-c-teal-soft), var(--vp-c-cyan-2), var(--vp-c-teal-soft), transparent 90%) border-box;
+  border-top: 1px solid transparent;
+}
+
+.VPFooter .message,
+.VPFooter .copyright {
+  color: var(--vp-c-text-2);
+  font-size: 0.9em;
+}
+
+/**
+ * Global Enhancements
+ * -------------------------------------------------------------------------- */
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better page background */
+.Layout {
+  background:
+    radial-gradient(ellipse 100% 100% at 100% 0%, rgba(0, 186, 248, 0.03), transparent 50%),
+    radial-gradient(ellipse 80% 80% at 0% 100%, rgba(20, 184, 166, 0.03), transparent 50%);
+}
+
+/* Enhanced nav bar */
+.VPNav {
+  backdrop-filter: blur(12px);
+}
+
+.VPNavBar {
+  background: rgba(var(--vp-c-bg-rgb, 255, 255, 255), 0.8) !important;
+  backdrop-filter: blur(12px);
+}
+
+.dark .VPNavBar {
+  background: rgba(var(--vp-c-bg-rgb, 30, 30, 32), 0.8) !important;
+}
+
+/* Action buttons enhancement */
+.VPHero .actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Hero image glow effect */
+.VPHero .image-container {
+  position: relative;
+}
+
+.VPHero .image-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(0, 186, 248, 0.15), transparent 70%);
+  filter: blur(40px);
+  z-index: -1;
+}
+
+/* Animated gradient for brand text on hover */
+.VPHero .name:hover {
+  animation: gradient-shift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Content area polish */
+.VPContent {
+  position: relative;
+}
+
+/* Dark mode adjustments */
+.dark {
+  --vp-c-teal-soft: rgba(20, 184, 166, 0.16);
+}
+
+.dark .VPFeature {
+  background: linear-gradient(135deg, var(--vp-c-bg-soft) 0%, rgba(20, 184, 166, 0.02) 100%);
+}
+
+.dark .VPFeature:hover {
+  background: linear-gradient(135deg, var(--vp-c-bg-soft) 0%, rgba(20, 184, 166, 0.06) 100%);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(0, 186, 248, 0.1);
+}
+
+.dark .VPHero::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(20, 184, 166, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(0, 186, 248, 0.06), transparent);
+}
