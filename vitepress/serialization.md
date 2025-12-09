@@ -176,6 +176,98 @@ function initializeMachine(): MachineState<State, Context> {
 }
 ```
 
+### Database Persistence (PostgreSQL)
+
+```ts
+import { serializeMachine, deserializeMachine, createMachine, type MachineState } from '@minifsm/core';
+import { Pool } from 'pg';
+
+const pool = new Pool();
+
+// Save machine state to database
+async function saveMachineState(
+  userId: string,
+  machine: MachineState<State, Context>
+): Promise<void> {
+  const serialized = serializeMachine(machine);
+  await pool.query(
+    `INSERT INTO machine_states (user_id, state_data, updated_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (user_id) DO UPDATE SET state_data = $2, updated_at = NOW()`,
+    [userId, JSON.stringify(serialized)]
+  );
+}
+
+// Load machine state from database
+async function loadMachineState(userId: string): Promise<MachineState<State, Context>> {
+  const result = await pool.query(
+    'SELECT state_data FROM machine_states WHERE user_id = $1',
+    [userId]
+  );
+
+  if (result.rows.length > 0) {
+    try {
+      return deserializeMachine({
+        serialized: JSON.parse(result.rows[0].state_data),
+        definition
+      });
+    } catch {
+      console.warn(`Invalid state for user ${userId}, using default`);
+    }
+  }
+
+  return createMachine({
+    currentState: 'idle',
+    context: { data: null, timestamp: 0 }
+  });
+}
+```
+
+### Database Persistence (MongoDB)
+
+```ts
+import { serializeMachine, deserializeMachine, createMachine, type MachineState } from '@minifsm/core';
+import { MongoClient } from 'mongodb';
+
+const client = new MongoClient(process.env.MONGODB_URI ?? '');
+const db = client.db('app');
+const machineStates = db.collection('machine_states');
+
+// Save machine state
+async function saveMachineState(
+  userId: string,
+  machine: MachineState<State, Context>
+): Promise<void> {
+  const serialized = serializeMachine(machine);
+  await machineStates.updateOne(
+    { userId },
+    { $set: { ...serialized, updatedAt: new Date() } },
+    { upsert: true }
+  );
+}
+
+// Load machine state
+async function loadMachineState(userId: string): Promise<MachineState<State, Context>> {
+  const doc = await machineStates.findOne({ userId });
+
+  if (doc) {
+    try {
+      return deserializeMachine({
+        serialized: { currentState: doc.currentState, context: doc.context },
+        definition
+      });
+    } catch {
+      console.warn(`Invalid state for user ${userId}, using default`);
+    }
+  }
+
+  return createMachine({
+    currentState: 'idle',
+    context: { data: null, timestamp: 0 }
+  });
+}
+```
+
 ## Type Safety
 
 The `SerializedMachine` type preserves your context type for type-safe serialization:
@@ -206,8 +298,9 @@ const serialized: SerializedMachine<MyContext> = {
 4. **Clean up old states** — Remove persisted state when user logs out or data expires
 5. **Test serialization** — Include tests for your serialization/deserialization flow
 
+### Versioned Context for Migrations
+
 ```ts
-// Example: Versioned context for migrations
 interface VersionedContext {
   version: number;
   data: string | null;
@@ -222,6 +315,69 @@ function migrateContext(context: Partial<VersionedContext>): VersionedContext {
   return context as VersionedContext;
 }
 ```
+
+### Runtime Validation with Zod
+
+For type-safe runtime validation of serialized data, use [Zod](https://zod.dev/):
+
+```ts
+import { z } from 'zod';
+import { deserializeMachine, createMachine, type MachineState } from '@minifsm/core';
+
+// Define your context schema
+const contextSchema = z.object({
+  userId: z.string(),
+  items: z.array(z.string()),
+  preferences: z.object({
+    theme: z.enum(['light', 'dark']),
+    notifications: z.boolean()
+  })
+});
+
+type Context = z.infer<typeof contextSchema>;
+
+// Define valid states
+const stateSchema = z.enum(['idle', 'loading', 'success', 'error']);
+
+type State = z.infer<typeof stateSchema>;
+
+// Serialized machine schema
+const serializedMachineSchema = z.object({
+  currentState: stateSchema,
+  context: contextSchema
+});
+
+// Safe deserialization with validation
+function safeDeserialize(json: string): MachineState<State, Context> {
+  try {
+    const parsed = JSON.parse(json);
+    const validated = serializedMachineSchema.parse(parsed);
+
+    return deserializeMachine({
+      serialized: validated,
+      definition
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation failed:', error.errors);
+    }
+
+    // Return default state on validation failure
+    return createMachine({
+      currentState: 'idle',
+      context: {
+        userId: '',
+        items: [],
+        preferences: { theme: 'light', notifications: true }
+      }
+    });
+  }
+}
+```
+
+::: tip
+Zod validation catches issues that TypeScript's compile-time checks cannot, such as malformed data from APIs, corrupted localStorage, or tampering. Use it at system boundaries.
+:::
 
 ## Next Steps
 

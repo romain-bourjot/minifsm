@@ -341,6 +341,185 @@ MiniFSM works with Svelte stores.
 {/if}
 ```
 
+## Server-Side Rendering (SSR)
+
+MiniFSM's serialization makes it easy to hydrate state machines on the client from server-rendered data.
+
+### Next.js (App Router)
+
+```tsx
+// app/checkout/page.tsx
+import { cookies } from 'next/headers';
+import { deserializeMachine, createMachine, type MachineState } from '@minifsm/core';
+import CheckoutClient from './CheckoutClient';
+
+// Server Component: Load initial state
+async function getInitialMachine(): Promise<MachineState<CheckoutState, CheckoutContext>> {
+  const cookieStore = await cookies();
+  const saved = cookieStore.get('checkout-state');
+
+  if (saved) {
+    try {
+      return deserializeMachine({
+        serialized: JSON.parse(saved.value),
+        definition: checkoutDefinition
+      });
+    } catch {
+      // Invalid state, start fresh
+    }
+  }
+
+  return createMachine({
+    currentState: 'cart',
+    context: { items: [], total: 0 }
+  });
+}
+
+export default async function CheckoutPage() {
+  const initialMachine = await getInitialMachine();
+
+  return <CheckoutClient initialMachine={initialMachine} />;
+}
+```
+
+```tsx
+// app/checkout/CheckoutClient.tsx
+'use client';
+
+import { useState, useCallback } from 'react';
+import { doTransition, serializeMachine, type MachineState } from '@minifsm/core';
+
+interface Props {
+  initialMachine: MachineState<CheckoutState, CheckoutContext>;
+}
+
+export default function CheckoutClient({ initialMachine }: Props) {
+  const [machine, setMachine] = useState(initialMachine);
+
+  const send = useCallback((input: CheckoutInput) => {
+    setMachine(current => {
+      const next = doTransition(checkoutDefinition, current, input);
+      // Persist to cookie for SSR recovery
+      document.cookie = `checkout-state=${JSON.stringify(serializeMachine(next))}`;
+      return next;
+    });
+  }, []);
+
+  return (
+    <div>
+      <p>Step: {machine.currentState}</p>
+      {/* ... */}
+    </div>
+  );
+}
+```
+
+### Next.js (Pages Router)
+
+```tsx
+// pages/checkout.tsx
+import { GetServerSideProps } from 'next';
+import { deserializeMachine, createMachine, serializeMachine, type MachineState } from '@minifsm/core';
+
+interface Props {
+  initialMachine: ReturnType<typeof serializeMachine>;
+}
+
+export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+  const saved = context.req.cookies['checkout-state'];
+
+  let machine: MachineState<CheckoutState, CheckoutContext>;
+
+  if (saved) {
+    try {
+      machine = deserializeMachine({
+        serialized: JSON.parse(saved),
+        definition: checkoutDefinition
+      });
+    } catch {
+      machine = createMachine({
+        currentState: 'cart',
+        context: { items: [], total: 0 }
+      });
+    }
+  } else {
+    machine = createMachine({
+      currentState: 'cart',
+      context: { items: [], total: 0 }
+    });
+  }
+
+  return {
+    props: {
+      initialMachine: serializeMachine(machine)
+    }
+  };
+};
+
+export default function CheckoutPage({ initialMachine }: Props) {
+  const [machine, setMachine] = useState(() =>
+    deserializeMachine({ serialized: initialMachine, definition: checkoutDefinition })
+  );
+
+  // ... component logic
+}
+```
+
+### Nuxt.js
+
+```vue
+<!-- pages/checkout.vue -->
+<script setup lang="ts">
+import { deserializeMachine, createMachine, serializeMachine, doTransition, type MachineState } from '@minifsm/core';
+
+// Server-side: Load initial state
+const initialState = await useAsyncData('checkout-state', async () => {
+  const cookie = useCookie('checkout-state');
+
+  if (cookie.value) {
+    try {
+      return deserializeMachine({
+        serialized: JSON.parse(cookie.value as string),
+        definition: checkoutDefinition
+      });
+    } catch {
+      // Invalid state
+    }
+  }
+
+  return createMachine({
+    currentState: 'cart' as CheckoutState,
+    context: { items: [], total: 0 }
+  });
+});
+
+// Client-side reactive state
+const machine = ref<MachineState<CheckoutState, CheckoutContext>>(initialState.data.value!);
+
+function send(input: CheckoutInput) {
+  machine.value = doTransition(checkoutDefinition, machine.value, input);
+
+  // Persist for next SSR
+  const cookie = useCookie('checkout-state');
+  cookie.value = JSON.stringify(serializeMachine(machine.value));
+}
+</script>
+
+<template>
+  <div>
+    <p>Step: {{ machine.currentState }}</p>
+    <button @click="send({ type: 'NEXT' })">Next</button>
+  </div>
+</template>
+```
+
+::: tip SSR Best Practices
+1. **Serialize on the server** — Pass serialized state as props, not the full machine
+2. **Hydrate on the client** — Deserialize in the client component or initial state
+3. **Validate on restore** — Always wrap `deserializeMachine` in try-catch for SSR data
+4. **Persist state changes** — Sync client-side changes to cookies or API for session recovery
+:::
+
 ## Node.js / Server-Side
 
 MiniFSM works the same on the server:

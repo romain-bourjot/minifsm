@@ -139,6 +139,10 @@ setInterval(() => {
 }, 1000);
 ```
 
+::: warning Side Effects in Context
+This example stores callback functions in context for demonstration purposes. In production, prefer triggering side effects outside the state machine based on state changes rather than calling functions from within handlers. This keeps your state machine pure and easier to test.
+:::
+
 ## Vending Machine
 
 A multi-input state machine with conditional transitions based on context.
@@ -419,6 +423,191 @@ Conditional transitions based on context:
   }
   return undefined; // Stay in SELECTED if balance insufficient
 }
+```
+
+## Async Data Fetching
+
+A common pattern for managing asynchronous operations with loading, success, and error states.
+
+**States:** `idle` → `loading` → `success` | `error`
+
+**Use case:** API calls, data loading, form submissions
+
+```ts
+import { createMachine, doTransition, type MachineDef, type BaseInput } from '@minifsm/core';
+
+type FetchState = 'idle' | 'loading' | 'success' | 'error';
+
+interface FetchContext<T> {
+  data: T | null;
+  error: string | null;
+}
+
+interface FetchInput extends BaseInput<'FETCH'> {}
+interface SuccessInput<T> extends BaseInput<'SUCCESS'> { data: T }
+interface ErrorInput extends BaseInput<'ERROR'> { error: string }
+interface RetryInput extends BaseInput<'RETRY'> {}
+interface ResetInput extends BaseInput<'RESET'> {}
+
+type Input<T> = FetchInput | SuccessInput<T> | ErrorInput | RetryInput | ResetInput;
+
+function createFetchDefinition<T>(): MachineDef<FetchState, FetchContext<T>, Input<T>> {
+  return {
+    idle: ({ input }) => {
+      if (input.type === 'FETCH') {
+        return { currentState: 'loading', context: { data: null, error: null } };
+      }
+      return undefined;
+    },
+
+    loading: ({ input }) => {
+      if (input.type === 'SUCCESS') {
+        return { currentState: 'success', context: { data: input.data, error: null } };
+      }
+      if (input.type === 'ERROR') {
+        return { currentState: 'error', context: { data: null, error: input.error } };
+      }
+      return undefined;
+    },
+
+    success: ({ context, input }) => {
+      if (input.type === 'FETCH') {
+        return { currentState: 'loading', context: { ...context, error: null } };
+      }
+      if (input.type === 'RESET') {
+        return { currentState: 'idle', context: { data: null, error: null } };
+      }
+      return undefined;
+    },
+
+    error: ({ input }) => {
+      if (input.type === 'RETRY') {
+        return { currentState: 'loading', context: { data: null, error: null } };
+      }
+      if (input.type === 'RESET') {
+        return { currentState: 'idle', context: { data: null, error: null } };
+      }
+      return undefined;
+    }
+  };
+}
+
+// Usage with React (conceptual)
+const definition = createFetchDefinition<{ name: string }>();
+let machine = createMachine<FetchState, FetchContext<{ name: string }>>({
+  currentState: 'idle',
+  context: { data: null, error: null }
+});
+
+// Trigger fetch
+machine = doTransition(definition, machine, { type: 'FETCH' });
+
+// Simulate API response
+machine = doTransition(definition, machine, {
+  type: 'SUCCESS',
+  data: { name: 'Alice' }
+});
+
+console.log(machine.currentState); // 'success'
+console.log(machine.context.data); // { name: 'Alice' }
+```
+
+## Nested State Machines
+
+For complex workflows, compose multiple machines by storing child machine states in the parent context.
+
+**Use case:** Multi-step wizards, checkout flows, complex forms
+
+```ts
+import { createMachine, doTransition, type MachineDef, type MachineState, type BaseInput } from '@minifsm/core';
+
+// Child machine: Shipping form
+type ShippingState = 'editing' | 'validated';
+interface ShippingContext { address: string; validated: boolean }
+interface UpdateAddressInput extends BaseInput<'UPDATE_ADDRESS'> { address: string }
+interface ValidateInput extends BaseInput<'VALIDATE'> {}
+type ShippingInput = UpdateAddressInput | ValidateInput;
+
+const shippingDefinition: MachineDef<ShippingState, ShippingContext, ShippingInput> = {
+  editing: ({ context, input }) => {
+    if (input.type === 'UPDATE_ADDRESS') {
+      return { currentState: 'editing', context: { ...context, address: input.address } };
+    }
+    if (input.type === 'VALIDATE' && context.address.length > 0) {
+      return { currentState: 'validated', context: { ...context, validated: true } };
+    }
+    return undefined;
+  },
+  validated: ({ context, input }) => {
+    if (input.type === 'UPDATE_ADDRESS') {
+      return { currentState: 'editing', context: { address: input.address, validated: false } };
+    }
+    return undefined;
+  }
+};
+
+// Parent machine: Checkout flow
+type CheckoutState = 'shipping' | 'payment' | 'confirmation';
+
+interface CheckoutContext {
+  shippingMachine: MachineState<ShippingState, ShippingContext>;
+}
+
+interface NextStepInput extends BaseInput<'NEXT_STEP'> {}
+interface ShippingActionInput extends BaseInput<'SHIPPING_ACTION'> {
+  action: ShippingInput;
+}
+type CheckoutInput = NextStepInput | ShippingActionInput;
+
+const checkoutDefinition: MachineDef<CheckoutState, CheckoutContext, CheckoutInput> = {
+  shipping: ({ context, input }) => {
+    if (input.type === 'SHIPPING_ACTION') {
+      // Delegate to child machine
+      const newShipping = doTransition(shippingDefinition, context.shippingMachine, input.action);
+      return { currentState: 'shipping', context: { ...context, shippingMachine: newShipping } };
+    }
+    if (input.type === 'NEXT_STEP' && context.shippingMachine.currentState === 'validated') {
+      return { currentState: 'payment', context };
+    }
+    return undefined;
+  },
+
+  payment: ({ context, input }) => {
+    if (input.type === 'NEXT_STEP') {
+      return { currentState: 'confirmation', context };
+    }
+    return undefined;
+  },
+
+  confirmation: () => undefined
+};
+
+// Usage
+let checkout = createMachine<CheckoutState, CheckoutContext>({
+  currentState: 'shipping',
+  context: {
+    shippingMachine: createMachine({
+      currentState: 'editing' as ShippingState,
+      context: { address: '', validated: false }
+    })
+  }
+});
+
+// Update shipping address via parent
+checkout = doTransition(checkoutDefinition, checkout, {
+  type: 'SHIPPING_ACTION',
+  action: { type: 'UPDATE_ADDRESS', address: '123 Main St' }
+});
+
+// Validate shipping
+checkout = doTransition(checkoutDefinition, checkout, {
+  type: 'SHIPPING_ACTION',
+  action: { type: 'VALIDATE' }
+});
+
+// Move to payment
+checkout = doTransition(checkoutDefinition, checkout, { type: 'NEXT_STEP' });
+console.log(checkout.currentState); // 'payment'
 ```
 
 ## Next Steps

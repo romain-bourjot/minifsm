@@ -19,7 +19,7 @@
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@minifsm/core)](https://bundlephobia.com/package/@minifsm/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
-> **MiniFSM** is a lightweight, TypeScript-first finite state machine (FSM) library with zero dependencies. Build predictable state machines for Node.js, browsers, Deno, Bun, and any JavaScript runtime. Define states as simple handler functions with full type safety for states, context, and transitions.
+> **MiniFSM** is a lightweight, TypeScript-first finite state machine (FSM) library — the simpler **XState alternative** at just ~1KB gzipped with zero dependencies. Perfect for React, Vue, Redux, and Node.js applications. Build predictable, type-safe state machines using simple handler functions with full type safety for states, context, and transitions.
 
 ---
 
@@ -240,6 +240,43 @@ Run an example:
 npm run example:counter
 ```
 
+## Testing State Machines
+
+MiniFSM's pure functional design makes testing straightforward. Since `doTransition` is a pure function, you can test state machines without mocks or complex setup:
+
+```ts
+import { createMachine, doTransition } from '@minifsm/core';
+import { describe, it, expect } from 'vitest'; // or jest, mocha
+
+describe('FetchMachine', () => {
+  const initialMachine = createMachine({
+    currentState: 'idle' as const,
+    context: { data: null, error: null }
+  });
+
+  it('transitions from idle to loading on FETCH', () => {
+    const result = doTransition(definition, initialMachine, { type: 'FETCH' });
+    expect(result.currentState).toBe('loading');
+  });
+
+  it('completes full fetch flow', () => {
+    let machine = initialMachine;
+
+    machine = doTransition(definition, machine, { type: 'FETCH' });
+    expect(machine.currentState).toBe('loading');
+
+    machine = doTransition(definition, machine, { type: 'SUCCESS', data: 'result' });
+    expect(machine.currentState).toBe('success');
+    expect(machine.context.data).toBe('result');
+  });
+
+  it('stays in current state for unhandled inputs', () => {
+    const result = doTransition(definition, initialMachine, { type: 'SUCCESS', data: 'test' });
+    expect(result).toBe(initialMachine); // Same reference - no transition occurred
+  });
+});
+```
+
 ## Frequently Asked Questions
 
 ### How does MiniFSM compare to XState?
@@ -286,6 +323,58 @@ If a state handler returns `undefined`, the machine stays in its current state w
 
 No. MiniFSM is immutable by design. Handlers should return new context objects using spread syntax or other immutable update patterns. The original machine and context are never modified.
 
+### How do I debug state transitions?
+
+Log the machine state before and after transitions to trace the flow:
+
+```ts
+console.log('Before:', machine.currentState, machine.context);
+const next = doTransition(definition, machine, input);
+console.log('After:', next.currentState, next.context);
+console.log('Transitioned:', machine !== next);
+```
+
+You can also use `serializeMachine()` to get a JSON snapshot for debugging.
+
+### Can I use async actions in handlers?
+
+State handlers are synchronous by design. For async operations, trigger side effects outside the machine based on state changes:
+
+```ts
+const next = doTransition(definition, machine, { type: 'FETCH' });
+if (next.currentState === 'loading') {
+  fetchData().then(data => {
+    setMachine(current => doTransition(definition, current, { type: 'SUCCESS', data }));
+  });
+}
+```
+
+### What is MINIFSM_DESERIALIZE_ERROR?
+
+This error occurs when `deserializeMachine` receives a serialized state that doesn't match any state in your definition. Common causes:
+
+- Typo in the serialized state name
+- State was renamed or removed in a new version
+- Corrupted or tampered serialized data
+
+Handle it with a try-catch and fall back to initial state if needed.
+
+### What are common mistakes to avoid?
+
+1. **Mutating context** — Always return a new object with spread syntax (`{ ...context, key: value }`)
+2. **Forgetting to return `undefined`** — Explicitly return `undefined` to stay in the current state
+3. **Missing state handlers** — TypeScript will catch this, but ensure all states have handlers
+4. **Side effects in handlers** — Keep handlers pure; trigger side effects based on state changes
+
+## Performance
+
+MiniFSM is designed for minimal runtime overhead:
+
+- **~1KB** minified and gzipped (zero dependencies)
+- **O(1)** state lookup using direct object property access
+- **Zero allocations** when staying in the same state (returns same reference)
+- **No runtime type checking** — all type safety is enforced at compile time
+
 ## TypeScript Support
 
 MiniFSM is written in TypeScript and provides full type inference:
@@ -302,6 +391,17 @@ const definition: MachineDef<'a' | 'b', Context, Input> = {
   // Error: Property 'b' is missing
 };
 ```
+
+### Migrating from Deprecated Types
+
+If you're using the deprecated `FSMMachine` or `FSMSerializedMachine` types, migrate to the new types:
+
+| Deprecated | Replacement |
+|------------|-------------|
+| `FSMMachine<State, Context>` | `MachineState<State, Context>` |
+| `FSMSerializedMachine<Context>` | `SerializedMachine<Context>` |
+
+The new types are functionally identical but follow a cleaner naming convention.
 
 ## Browser and Runtime Support
 

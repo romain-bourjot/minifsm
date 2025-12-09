@@ -251,6 +251,10 @@ setTimeout(() => {
 }, 15000);
 ```
 
+::: info Example Variations
+The [traffic-light.ts](https://github.com/romain-bourjot/minifsm/blob/main/examples/traffic-light.ts) example in the repository uses a simplified version that only cycles between colors. This tutorial demonstrates a more complete traffic light with `OFF` state, `TURN_ON`/`TURN_OFF` controls, and timing-based transitions to showcase additional FSM patterns.
+:::
+
 ## Next Steps
 
 - Explore more [Examples](/examples) including vending machines, word counters, and user lifecycles
