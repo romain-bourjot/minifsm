@@ -1,10 +1,4 @@
-import {
-  createNullAction,
-  createNullStateDefinition,
-  createNullTransition,
-  type FSMConditionalTransition,
-  type FSMDefinition
-} from '../src'
+import { type MachineDef, type MachineState, type BaseInput } from '../src'
 
 type UserState = 'WAITING_FOR_VALIDATION' | 'VALIDATED' | 'DELETED'
 
@@ -13,36 +7,37 @@ export interface UserContext {
   emailValidationToken: string | null
 }
 
-export type UserInput = {
-  type: 'EMAIL_VALIDATION_INPUT'
+interface EmailValidationInput extends BaseInput<'EMAIL_VALIDATION_INPUT'> {
   emailValidationToken: string
-} | { type: 'DELETE_INPUT' }
-
-const deleteTransition: FSMConditionalTransition<UserState, UserContext, UserInput> = {
-  ...createNullTransition('DELETED'),
-  condition: ({ input }: { input: UserInput }) => input.type === 'DELETE_INPUT'
 }
 
-export const userDefinition: FSMDefinition<UserState, UserContext, UserInput> = {
-  DELETED: createNullStateDefinition('DELETED'),
-  WAITING_FOR_VALIDATION: {
-    transitions: [
-      deleteTransition,
-      {
-        nextState: 'VALIDATED',
-        condition: ({ input, context }: { input: UserInput, context: UserContext }) => {
-          if (input.type !== 'EMAIL_VALIDATION_INPUT') {
-            return false
-          }
+interface DeleteInput extends BaseInput<'DELETE_INPUT'> {}
 
-          return input.emailValidationToken === context.emailValidationToken
-        },
-        action: createNullAction()
-      }],
-    defaultTransition: createNullTransition('WAITING_FOR_VALIDATION')
+export type UserInput = EmailValidationInput | DeleteInput
+
+export type UserMachine = MachineState<UserState, UserContext>
+
+export const userDefinition: MachineDef<UserState, UserContext, UserInput> = {
+  DELETED: () => undefined,
+
+  WAITING_FOR_VALIDATION: ({ context, input }) => {
+    if (input.type === 'DELETE_INPUT') {
+      return { currentState: 'DELETED', context }
+    }
+
+    if (input.type === 'EMAIL_VALIDATION_INPUT') {
+      if (input.emailValidationToken === context.emailValidationToken) {
+        return { currentState: 'VALIDATED', context }
+      }
+    }
+
+    return undefined
   },
-  VALIDATED: {
-    transitions: [deleteTransition],
-    defaultTransition: createNullTransition('VALIDATED')
+
+  VALIDATED: ({ context, input }) => {
+    if (input.type === 'DELETE_INPUT') {
+      return { currentState: 'DELETED', context }
+    }
+    return undefined
   }
 }

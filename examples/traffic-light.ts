@@ -1,4 +1,4 @@
-import { createNullTransition, doTransition, type FSMDefinition, type FSMMachine } from '../src'
+import { doTransition, type MachineDef, type MachineState, type BaseInput } from '../src'
 
 type TrafficLightState = 'GREEN' | 'YELLOW' | 'RED'
 
@@ -9,72 +9,40 @@ interface TrafficLightContext {
   lightGreen: () => void
 }
 
-interface TrafficLightInput {
-  type: 'tick'
-}
+interface TrafficLightInput extends BaseInput<'tick'> {}
 
-function isTickCondition ({ input }: { input: TrafficLightInput }): boolean {
-  return input.type === 'tick'
-}
+type TrafficLightMachine = MachineState<TrafficLightState, TrafficLightContext>
 
-const trafficLightFSMDefinition: FSMDefinition<TrafficLightState, TrafficLightContext, TrafficLightInput> = {
-  RED: {
-    transitions: [
-      {
-        nextState: 'GREEN',
-        condition: isTickCondition,
-        action: ({ context }: {
-          context: TrafficLightContext
-          input: TrafficLightInput
-        }): TrafficLightContext => {
-          context.turnOff()
-          context.lightGreen()
-
-          return context
-        }
-      }
-    ],
-    defaultTransition: createNullTransition('RED')
+const trafficLightFSMDefinition: MachineDef<TrafficLightState, TrafficLightContext, TrafficLightInput> = {
+  RED: ({ context, input }) => {
+    if (input.type === 'tick') {
+      context.turnOff()
+      context.lightGreen()
+      return { currentState: 'GREEN', context }
+    }
+    return undefined
   },
-  YELLOW: {
-    transitions: [
-      {
-        nextState: 'RED',
-        condition: isTickCondition,
-        action: ({ context }: {
-          context: TrafficLightContext
-          input: TrafficLightInput
-        }): TrafficLightContext => {
-          context.turnOff()
-          context.lightRed()
 
-          return context
-        }
-      }
-    ],
-    defaultTransition: createNullTransition('YELLOW')
+  YELLOW: ({ context, input }) => {
+    if (input.type === 'tick') {
+      context.turnOff()
+      context.lightRed()
+      return { currentState: 'RED', context }
+    }
+    return undefined
   },
-  GREEN: {
-    transitions: [
-      {
-        nextState: 'YELLOW',
-        condition: isTickCondition,
-        action: ({ context }: {
-          context: TrafficLightContext
-          input: TrafficLightInput
-        }): TrafficLightContext => {
-          context.turnOff()
-          context.lightYellow()
 
-          return context
-        }
-      }
-    ],
-    defaultTransition: createNullTransition('GREEN')
+  GREEN: ({ context, input }) => {
+    if (input.type === 'tick') {
+      context.turnOff()
+      context.lightYellow()
+      return { currentState: 'YELLOW', context }
+    }
+    return undefined
   }
 }
 
-let machine: FSMMachine<TrafficLightState, TrafficLightContext> = {
+let machine: TrafficLightMachine = {
   currentState: 'RED',
   context: {
     turnOff: () => {
@@ -93,5 +61,5 @@ let machine: FSMMachine<TrafficLightState, TrafficLightContext> = {
 }
 
 setInterval(() => {
-  machine = doTransition({ definition: trafficLightFSMDefinition, machine, input: { type: 'tick' } })
+  machine = doTransition(trafficLightFSMDefinition, machine, { type: 'tick' })
 }, 1000)

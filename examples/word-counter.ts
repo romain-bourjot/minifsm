@@ -1,4 +1,4 @@
-import { createMachine, doTransition, type FSMDefinition } from '../src'
+import { createMachine, doTransition, type MachineDef, type MachineState, type BaseInput } from '../src'
 
 // noinspection SpellCheckingInspection
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789?'
@@ -12,138 +12,111 @@ interface WordCountContext {
   bufferChar: string
 }
 
-type WordCountInput = string
-
-function validWordCharCondition ({
-  input
-}: {
-  context: WordCountContext
-  input: WordCountInput
-}): boolean {
-  return ALPHABET.includes(input.toLowerCase())
+interface WordCountInput extends BaseInput<'CHAR'> {
+  char: string
 }
 
-function contractionCondition ({
-  input
-}: {
-  context: WordCountContext
-  input: WordCountInput
-}): boolean {
-  return CONTRACTION.includes(input.toLowerCase())
+function isValidWordChar (char: string): boolean {
+  return ALPHABET.includes(char.toLowerCase())
 }
 
-function resetTokenAction ({
-  context
-}: {
-  context: WordCountContext
-  input: WordCountInput
-}): WordCountContext {
-  return {
-    currentToken: '',
-    bufferChar: '',
-    tokens: context.tokens
-  }
+function isContraction (char: string): boolean {
+  return CONTRACTION.includes(char.toLowerCase())
 }
 
-function appendToCurrentTokenAction ({
-  context,
-  input
-}: {
-  context: WordCountContext
-  input: WordCountInput
-}): WordCountContext {
-  return {
-    currentToken: `${context.currentToken}${context.bufferChar}${input.toLowerCase()}`,
-    bufferChar: '',
-    tokens: context.tokens
-  }
-}
-
-function appendToBufferCharAction ({
-  context,
-  input
-}: {
-  context: WordCountContext
-  input: WordCountInput
-}): WordCountContext {
-  return {
-    currentToken: context.currentToken,
-    bufferChar: input.toLowerCase(),
-    tokens: context.tokens
-  }
-}
-
-function pushTokenAction ({
-  context
-}: {
-  context: WordCountContext
-  input: WordCountInput
-}): WordCountContext {
-  return {
-    tokens: [...context.tokens, context.currentToken],
-    currentToken: '',
-    bufferChar: ''
-  }
-}
-
-export const wordCountFsmDefinition: FSMDefinition<WordCountState, WordCountContext, WordCountInput> = {
-  IDLE: {
-    transitions: [
-      {
-        nextState: 'IN_WORD',
-        condition: validWordCharCondition,
-        action: appendToCurrentTokenAction
+export const wordCountFsmDefinition: MachineDef<WordCountState, WordCountContext, WordCountInput> = {
+  IDLE: ({ context, input }) => {
+    if (isValidWordChar(input.char)) {
+      return {
+        currentState: 'IN_WORD',
+        context: {
+          currentToken: input.char.toLowerCase(),
+          bufferChar: '',
+          tokens: context.tokens
+        }
       }
-    ],
-    defaultTransition: {
-      nextState: 'IDLE',
-      action: resetTokenAction
+    }
+    // Reset token on non-word char
+    return {
+      currentState: 'IDLE',
+      context: {
+        currentToken: '',
+        bufferChar: '',
+        tokens: context.tokens
+      }
     }
   },
-  IN_WORD: {
-    transitions: [
-      {
-        nextState: 'IN_WORD',
-        condition: validWordCharCondition,
-        action: appendToCurrentTokenAction
-      },
-      {
-        nextState: 'IN_CONTRACTION',
-        condition: contractionCondition,
-        action: appendToBufferCharAction
+
+  IN_WORD: ({ context, input }) => {
+    if (isValidWordChar(input.char)) {
+      return {
+        currentState: 'IN_WORD',
+        context: {
+          currentToken: `${context.currentToken}${context.bufferChar}${input.char.toLowerCase()}`,
+          bufferChar: '',
+          tokens: context.tokens
+        }
       }
-    ],
-    defaultTransition: {
-      nextState: 'IDLE',
-      action: pushTokenAction
+    }
+
+    if (isContraction(input.char)) {
+      return {
+        currentState: 'IN_CONTRACTION',
+        context: {
+          currentToken: context.currentToken,
+          bufferChar: input.char.toLowerCase(),
+          tokens: context.tokens
+        }
+      }
+    }
+
+    // End of word - push token
+    return {
+      currentState: 'IDLE',
+      context: {
+        tokens: [...context.tokens, context.currentToken],
+        currentToken: '',
+        bufferChar: ''
+      }
     }
   },
-  IN_CONTRACTION: {
-    transitions: [
-      {
-        condition: validWordCharCondition,
-        action: appendToCurrentTokenAction,
-        nextState: 'IN_WORD'
+
+  IN_CONTRACTION: ({ context, input }) => {
+    if (isValidWordChar(input.char)) {
+      return {
+        currentState: 'IN_WORD',
+        context: {
+          currentToken: `${context.currentToken}${context.bufferChar}${input.char.toLowerCase()}`,
+          bufferChar: '',
+          tokens: context.tokens
+        }
       }
-    ],
-    defaultTransition: {
-      nextState: 'IDLE',
-      action: pushTokenAction
+    }
+
+    // End of word (contraction wasn't followed by valid char)
+    return {
+      currentState: 'IDLE',
+      context: {
+        tokens: [...context.tokens, context.currentToken],
+        currentToken: '',
+        bufferChar: ''
+      }
     }
   }
 }
 
 function count (txt: string): void {
-  let machine = createMachine({
+  let machine: MachineState<WordCountState, WordCountContext> = createMachine({
     currentState: 'IDLE',
     context: {
       currentToken: '',
       bufferChar: '',
-      tokens: [] as string[]
+      tokens: []
     }
   })
-  for (const input of [...(txt + '\n')]) {
-    machine = doTransition({ definition: wordCountFsmDefinition, input, machine })
+
+  for (const char of [...(txt + '\n')]) {
+    machine = doTransition(wordCountFsmDefinition, machine, { type: 'CHAR', char })
   }
 
   console.log(txt, ': ', machine.context.tokens)

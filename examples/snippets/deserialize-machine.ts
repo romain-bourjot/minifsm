@@ -2,7 +2,7 @@
 
 import 'module-alias/register'
 
-import { deserializeMachine, type FSMDefinition } from '@minifsm/core'
+import { deserializeMachine, type MachineDef, type BaseInput } from '@minifsm/core'
 
 // Define types for state, context, and input
 type MyState = 'STATE_A' | 'STATE_B'
@@ -11,20 +11,12 @@ interface MyContext {
   data: string
 }
 
-interface MyInput {
-  action: string
-}
+interface MyInput extends BaseInput<'ACTION'> {}
 
-// Define an FSM definition
-const fsmDefinition: FSMDefinition<MyState, MyContext, MyInput> = {
-  STATE_A: {
-    transitions: [],
-    defaultTransition: { nextState: 'STATE_A', action: ({ context }) => context }
-  },
-  STATE_B: {
-    transitions: [],
-    defaultTransition: { nextState: 'STATE_B', action: ({ context }) => context }
-  }
+// Define an FSM definition with function-based handlers
+const fsmDefinition: MachineDef<MyState, MyContext, MyInput> = {
+  STATE_A: () => undefined,
+  STATE_B: () => undefined
 }
 
 // Define a serialized machine
